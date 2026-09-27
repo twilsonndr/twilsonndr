@@ -86,11 +86,13 @@ scripts/       smoke test, artifact converter
 
 ## CI and hosting
 
-`.github/workflows/tiny-claw.yml` only runs when something under `tiny-claw/` (or the workflow itself) changes. Every game in this repo has its own independent workflow.
+`.github/workflows/tiny-claw.yml` is a small caller of the shared `.github/workflows/game.yml`, which every game in this repo uses.
 
-1. **build**: typecheck, tests, build, headless smoke test, then uploads the playable build and the smoke screenshots as artifacts. Runs on pushes and PRs.
-2. **deploy**: on any push that passes, from any branch, commits the build to `tiny-claw/` on the `gh-pages` branch. It never touches other games' folders, and the latest green push wins.
+- **Builds only when this game changes.** Pushes to `main` and PRs that touch `tiny-claw/**` run typecheck, tests, build and the headless smoke test, and upload the playable build and smoke screenshots. PRs that change the shared workflow or publish script also run it.
+- **Publishes only from `main`.** Branches and PRs never deploy.
+- **Never overwrites old builds.** `.github/scripts/publish-game.sh` puts the live build at `gh-pages/tiny-claw/index.html` and keeps every build it has published under `tiny-claw/builds/<date>-<commit>/`, with a list at `tiny-claw/builds/`. It never touches other games' folders or the arcade root.
+- **Skips unchanged builds.** A byte-identical build commits and pushes nothing. A build that matches an older archived one goes live again without a duplicate copy.
 
-One-time setup for the public site: *Settings > Pages > Build and deployment > Source* = *Deploy from a branch*, branch `gh-pages`, folder `/ (root)`. The game is then at `https://<owner>.github.io/<repo>/tiny-claw/`, with the arcade landing page (`arcade/`, its own workflow) at the root.
+One-time setup for the public site: *Settings > Pages > Build and deployment > Source* = *Deploy from a branch*, branch `gh-pages`, folder `/ (root)`. The game is then at `https://<owner>.github.io/<repo>/tiny-claw/`, with the arcade landing page (`arcade/`, its own main-only workflow) at the root.
 
 `npm run build` also writes `dist/artifact.html`, the same game reshaped for hosting as a Claude artifact.

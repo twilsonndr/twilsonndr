@@ -1,10 +1,11 @@
 name: Arcade landing page
 
-# Publishes arcade/ to the root of the gh-pages branch. Games publish their own
-# folders from their own workflows; this never touches them.
+# Publishes arcade/ to the root of the gh-pages branch, only from main. Games publish
+# their own folders from their own workflows; this never touches them.
 
 on:
   push:
+    branches: [main]
     paths: ['arcade/**', '.github/workflows/arcade.yml']
   workflow_dispatch:
 
@@ -18,6 +19,7 @@ permissions:
 jobs:
   deploy:
     name: Publish arcade/ to gh-pages root
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

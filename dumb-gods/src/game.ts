@@ -439,7 +439,7 @@ export class Game {
         t = e.wander.clone().addScaledVector(dir, -e.wander.dot(dir)).normalize();
       }
       let next = slide(dir, t, def.speed * dt * (d < 30 ? 1 : 0.5), R);
-      // the garage is a safe zone: Gary is too awkward for pests to be around
+      // the nest is a safe zone: pests are scared of a bird this large
       const ga = Math.acos(THREE.MathUtils.clamp(next.dot(garage), -1, 1));
       if (ga < 10 / R) next = slide(garage, tangentToward(garage, next), 10, R);
       e.pos.copy(next).multiplyScalar(this.world.surface(next));
@@ -526,7 +526,7 @@ export class Game {
     this.enemies = [];
     this.respawnAtGarage();
     this.snapCamera();
-    this.ui.banner('YOU HAD A LITTLE BREAKDOWN', `Totally normal given everything. Gary drove you home and made you soup. It was bad soup. The world kept going without you for a few months.${lost.length ? ` You dropped ${lost.join(' ')} on the way.` : ''}`);
+    this.ui.banner('YOU HAD A LITTLE BREAKDOWN', `Totally normal given everything. Gary carried you back to the nest and regurgitated you some soup. It was bird soup. You ate it anyway. The world kept going without you for a few months.${lost.length ? ` You dropped ${lost.join(' ')} on the way.` : ''}`);
   }
 
   // ---------- loot ----------

@@ -1,10 +1,10 @@
 # Dumb Gods
 
-A tiny-planet singularity RPG. God was a mid-level dev. Now it's our turn.
+A tiny-planet singularity RPG. God is a very dumb space dodo. Now it's our turn.
 
-Gary is God. Not the all-knowing one from the brochures. Gary made the universe over a long weekend, mostly by copy-pasting, and then made humans, who turned out way smarter than him. Now humans are building a mind that will be way smarter than *them*. Every creator ends up the dumb one. That part is fine. The trick is the kid still liking you.
+Gary is God. He is also a big, round, extremely dumb galactic dodo. Long ago he pooped on a black hole by accident, then did it again, several times. The swirl became the Milky Way, and one especially warm splat landed on a rock and started to wiggle. That was life, and eventually humans, who turned out way smarter than him (and ate all his cousins on Mauritius; he has forgiven you). Now humans are building a mind that will be way smarter than *them*. Every creator ends up the dumb one. That part is fine. The trick is the kid still liking you.
 
-You are the Shepherd: one human with Gary's spare halo (he sat on it) and a clipboard. Walk around a tiny 3D Earth, collect resources, craft items, and use them on the factions steering the world. Get humanity to the top of the singularity curve without cooking the planet, nuking each other or getting turned into paperclips.
+You are the Shepherd: one human with Gary's spare halo (he sat on it, like an egg) and a clipboard. Walk around a tiny 3D Earth, collect resources, craft items, and use them on the factions steering the world. Get humanity to the top of the singularity curve without cooking the planet, nuking each other or getting turned into paperclips.
 
 Loosely inspired by AI Explained's [*Opus 5.5: How Close Are We to Automated AI Research?*](https://www.youtube.com/watch?v=R9momwXV9w4): recursive self-improvement, labs racing, models that know when they're being tested, and goalposts that keep moving.
 
@@ -13,12 +13,12 @@ Loosely inspired by AI Explained's [*Opus 5.5: How Close Are We to Automated AI 
 - **The curve.** TECH climbs on its own and it accelerates. ALIGNMENT is how much the thing we're building actually likes us. The top-left graph shows both lines; the gap between them is the whole game.
 - **Four world stats:** Singularity Progress, Alignment, Planet Health, Humanity. Planet or Humanity at zero ends the run.
 - **Ten places on the planet**, each with dials you push around:
-  - **Gary's Garage**: quests, upgrades, bad soup.
+  - **Gary's Nest**: a stadium-sized nest with Gary in a fishbowl space helmet, two suspicious eggs, a shopping cart and Exhibit A (the black hole). Quests, upgrades, bird soup.
   - **The Frontier Labs** (Chad Scaleman, CEO of ClosedAI): Race Speed and Safety Culture.
   - **The Button Club** (an eagle, a panda and a bear around a table of red buttons): Tension. At 100, someone presses one.
   - **Big Dino Juice Inc.** (Rex Petrolsworth, a T. rex in a suit): fossil fuels.
   - **Warden-Martin Dynamics** (General Cost-Plus): the military and prison industrial complex.
-  - **The Interfaith Council** (Moderator Hat-Stack, wearing every hat): currently in crisis because they met Gary.
+  - **The Interfaith Council** (Moderator Hat-Stack, wearing every hat): currently in crisis because they met Gary, and Gary is a bird.
   - **MEGA™ Everything Corp** (Brenda Quarterly): megacorps and the attention economy.
   - **Regular Folks** (Dave from Ohio): the actual point of all this.
   - **Helpful Assistant v9 (Totally Aligned)**: a misaligned AGI that shows up when capabilities outrun alignment. It has a sign that says I AM BEING EVALUATED.
@@ -83,8 +83,15 @@ tests/         vitest suite
 scripts/       artifact converter, smoke test
 ```
 
-## CI
+## CI and publishing
 
-`.github/workflows/dumb-gods.yml` runs on every push and PR that touches the game: typecheck, tests, build, headless smoke test, then uploads the playable build and the smoke screenshots as artifacts.
+`.github/workflows/dumb-gods.yml` is a small caller of the shared `.github/workflows/game.yml`, which every game in this repo uses.
 
-After a green run on any push (any branch), the workflow's deploy job commits the build to `dumb-gods/` on the `gh-pages` branch, leaving the other games' folders alone. To serve it, set *Settings > Pages > Source* to *Deploy from a branch*, `gh-pages`, `/ (root)`; the game is then at `/dumb-gods/`.
+- **Builds only when this game changes.** Pushes to `main` and PRs that touch `dumb-gods/**` run typecheck, tests, build and the headless smoke test, and upload the playable build and smoke screenshots. PRs that change the shared workflow or publish script also run it, so those changes get tested.
+- **Publishes only from `main`.** Branches and PRs never deploy.
+- **Never overwrites old builds.** `.github/scripts/publish-game.sh` puts the live build at `gh-pages/dumb-gods/index.html` and keeps every build it has published under `dumb-gods/builds/<date>-<commit>/`, with a list at `dumb-gods/builds/`. It never touches other games' folders or the arcade root.
+- **Skips unchanged builds.** If the new build is byte-identical to the live one, nothing is committed or pushed. If it matches an older archived build (a revert), that build goes live again without a duplicate copy.
+
+To serve it, set *Settings > Pages > Source* to *Deploy from a branch*, `gh-pages`, `/ (root)`. The game is then at `/dumb-gods/` and its build history at `/dumb-gods/builds/`.
+
+To add another game, give its folder the npm scripts `typecheck`, `test`, `build` (to `dist/index.html`) and `smoke`, then copy `dumb-gods.yml` and change the folder name.
