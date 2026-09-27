@@ -83,8 +83,15 @@ tests/         vitest suite
 scripts/       artifact converter, smoke test
 ```
 
-## CI
+## CI and publishing
 
-`.github/workflows/dumb-gods.yml` runs on every push and PR that touches the game: typecheck, tests, build, headless smoke test, then uploads the playable build and the smoke screenshots as artifacts.
+`.github/workflows/dumb-gods.yml` is a small caller of the shared `.github/workflows/game.yml`, which every game in this repo uses.
 
-After a green run on any push (any branch), the workflow's deploy job commits the build to `dumb-gods/` on the `gh-pages` branch, leaving the other games' folders alone. To serve it, set *Settings > Pages > Source* to *Deploy from a branch*, `gh-pages`, `/ (root)`; the game is then at `/dumb-gods/`.
+- **Builds only when this game changes.** Pushes to `main` and PRs that touch `dumb-gods/**` run typecheck, tests, build and the headless smoke test, and upload the playable build and smoke screenshots. PRs that change the shared workflow or publish script also run it, so those changes get tested.
+- **Publishes only from `main`.** Branches and PRs never deploy.
+- **Never overwrites old builds.** `.github/scripts/publish-game.sh` puts the live build at `gh-pages/dumb-gods/index.html` and keeps every build it has published under `dumb-gods/builds/<date>-<commit>/`, with a list at `dumb-gods/builds/`. It never touches other games' folders or the arcade root.
+- **Skips unchanged builds.** If the new build is byte-identical to the live one, nothing is committed or pushed. If it matches an older archived build (a revert), that build goes live again without a duplicate copy.
+
+To serve it, set *Settings > Pages > Source* to *Deploy from a branch*, `gh-pages`, `/ (root)`. The game is then at `/dumb-gods/` and its build history at `/dumb-gods/builds/`.
+
+To add another game, give its folder the npm scripts `typecheck`, `test`, `build` (to `dist/index.html`) and `smoke`, then copy `dumb-gods.yml` and change the folder name.
