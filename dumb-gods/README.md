@@ -10,6 +10,7 @@ Loosely inspired by AI Explained's [*Opus 5.5: How Close Are We to Automated AI 
 
 ## How it plays
 
+- **The intro.** A skippable 50-second 3D cinematic: Gary drifts over a black hole and poops on it (several times), the swirl winds up into the Milky Way, a warm splat lands on a molten rock that cools into Earth, a googly-eyed cell wiggles and divides, and life marches out of the sea (fish, tetrapod, shrew, ape) until it becomes you, just as Gary's halo drops onto your head.
 - **The curve.** TECH climbs on its own and it accelerates. ALIGNMENT is how much the thing we're building actually likes us. The top-left graph shows both lines; the gap between them is the whole game.
 - **Four world stats:** Singularity Progress, Alignment, Planet Health, Humanity. Planet or Humanity at zero ends the run.
 - **Ten places on the planet**, each with dials you push around:
@@ -73,6 +74,7 @@ The smoke test looks for Chromium at `CHROMIUM_PATH`, `/opt/pw-browsers/chromium
 ```
 src/
   content.ts   factions, items, events, quests, endings, headlines (all the words)
+  intro.ts     the opening cinematic (a pure function of time, so it can seek anywhere)
   sim.ts       the world simulation: rates, drift, crafting, item effects, endings
   world.ts     the planet, ocean, atmosphere, clouds, cities, satellites, rings, smog
   models.ts    every 3D model

@@ -23,7 +23,7 @@ export function mat(color: number, o: { e?: number; ei?: number; r?: number; m?:
 }
 
 type V3 = [number, number, number];
-function mesh(geo: THREE.BufferGeometry, m: THREE.Material, pos: V3 = [0, 0, 0], rot: V3 = [0, 0, 0], scale?: V3) {
+export function mesh(geo: THREE.BufferGeometry, m: THREE.Material, pos: V3 = [0, 0, 0], rot: V3 = [0, 0, 0], scale?: V3) {
   const me = new THREE.Mesh(geo, m);
   me.position.set(...pos);
   me.rotation.set(...rot);
@@ -32,10 +32,10 @@ function mesh(geo: THREE.BufferGeometry, m: THREE.Material, pos: V3 = [0, 0, 0],
   me.receiveShadow = true;
   return me;
 }
-const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
-const cyl = (rt: number, rb: number, h: number, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s);
-const sph = (r: number, d = 1) => new THREE.IcosahedronGeometry(r, d);
-const cone = (r: number, h: number, s = 8) => new THREE.ConeGeometry(r, h, s);
+export const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
+export const cyl = (rt: number, rb: number, h: number, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s);
+export const sph = (r: number, d = 1) => new THREE.IcosahedronGeometry(r, d);
+export const cone = (r: number, h: number, s = 8) => new THREE.ConeGeometry(r, h, s);
 
 export function googlyEyes(size: number, gap: number, y: number, z: number) {
   const g = new THREE.Group();
@@ -105,7 +105,7 @@ export function makeHalo(r = 0.34) {
   return halo;
 }
 
-export function makePlayer(): Rig & { halo: THREE.Mesh } {
+export function makePlayer(): Rig & { halo: THREE.Mesh; clip: THREE.Group } {
   const rig = makePerson({ shirt: 0x6fb7ff, pants: 0x31405e, hat: 'hair', hatColor: 0x6b4226 });
   const halo = makeHalo();
   halo.position.set(0, 2.15, 0);
@@ -120,7 +120,7 @@ export function makePlayer(): Rig & { halo: THREE.Mesh } {
   clip.position.set(0.1, -0.6, 0.2);
   clip.rotation.x = -0.5;
   rig.arms[1].add(clip);
-  return { ...rig, halo };
+  return { ...rig, halo, clip };
 }
 
 export interface DodoRig {
