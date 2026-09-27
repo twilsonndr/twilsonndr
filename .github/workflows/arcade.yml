@@ -1,0 +1,58 @@
+name: Arcade landing page
+
+# Publishes arcade/ to the root of the gh-pages branch. Games publish their own
+# folders from their own workflows; this never touches them.
+
+on:
+  push:
+    paths: ['arcade/**', '.github/workflows/arcade.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: gh-pages-arcade
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Publish arcade/ to gh-pages root
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: arcade
+      - name: Commit arcade/ to the gh-pages root
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          for attempt in 1 2 3 4 5; do
+            rm -rf site
+            if git ls-remote --exit-code --heads "$url" gh-pages >/dev/null; then
+              git clone --quiet --depth 1 --branch gh-pages "$url" site
+            else
+              git init --quiet -b gh-pages site
+              git -C site remote add origin "$url"
+            fi
+            cp -r arcade/. site/
+            touch site/.nojekyll
+            git -C site config user.name 'github-actions[bot]'
+            git -C site config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git -C site add -A
+            if git -C site diff --cached --quiet; then
+              echo "Arcade page is already up to date on gh-pages"
+              exit 0
+            fi
+            git -C site commit --quiet -m "Publish arcade from $GITHUB_REF_NAME@${GITHUB_SHA::7}"
+            if git -C site push --quiet origin gh-pages; then
+              echo "Published the arcade page"
+              exit 0
+            fi
+            echo "gh-pages moved underneath us, retrying ($attempt)"
+            sleep $((attempt * 3))
+          done
+          exit 1
