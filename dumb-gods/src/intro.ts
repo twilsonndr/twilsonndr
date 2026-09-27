@@ -90,6 +90,7 @@ export class Intro {
   private earthK = -1;
   private earthGlow: THREE.Sprite;
   private splat: THREE.Mesh;
+  private splatFlash: THREE.Sprite;
   private bubble: THREE.Mesh;
   private cells: THREE.Group[] = [];
   private creatures: Creature[] = [];
@@ -257,6 +258,8 @@ export class Intro {
     splatTail.position.y = -0.75;
     this.splat.add(splatTail);
     s.add(this.splat);
+    this.splatFlash = this.sprite(0xfff3b0);
+    s.add(this.splatFlash);
 
     // ---- the evolution set: a bubble world with sea, shore and sky ----
     this.bubble = new THREE.Mesh(this.own(new THREE.SphereGeometry(80, 32, 16)), this.own(new THREE.MeshBasicMaterial({ color: 0x0b4f6c, side: THREE.BackSide, fog: false })));
@@ -489,12 +492,14 @@ export class Intro {
         if (t < r0 + POOP_FALL) {
           const k = (t - r0) / POOP_FALL;
           p.position.copy(start).lerp(hit, k).add(V(0, Math.sin(k * Math.PI) * 1.2, 0));
+          p.scale.set(1, 0.85, 1);
         } else {
           const k = (t - r0 - POOP_FALL) / POOP_SPIRAL;
           const ang = a + k * 4;
           const rad = 6.2 * (1 - k);
           p.position.set(Math.cos(ang) * rad, 0, Math.sin(ang) * rad).applyAxisAngle(V(1, 0, 0), 0.18);
-          p.scale.setScalar(1 - k * 0.8);
+          const sc = 1 - k * 0.8;
+          p.scale.set(sc, sc * 0.85, sc);
         }
         p.rotation.set(t * 5, t * 3, 0);
       }
@@ -526,9 +531,9 @@ export class Intro {
     (this.earth.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.55 * (1 - cool);
     this.earthGlow.visible = cool > 0.05;
     this.earthGlow.material.opacity = cool * 0.7;
-    const hitF = this.flashes[0];
-    if (t > SPLAT_HIT && t < SPLAT_HIT + 0.6) {
-      hitF.visible = true;
+    const hitF = this.splatFlash;
+    hitF.visible = t > SPLAT_HIT && t < SPLAT_HIT + 0.6;
+    if (hitF.visible) {
       hitF.position.copy(to);
       hitF.scale.setScalar(0.5 + (t - SPLAT_HIT) * 6);
       hitF.material.opacity = 1 - (t - SPLAT_HIT) / 0.6;
