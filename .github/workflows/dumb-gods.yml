@@ -1,0 +1,81 @@
+name: Dumb Gods
+
+on:
+  push:
+    paths: ['dumb-gods/**', '.github/workflows/dumb-gods.yml']
+  pull_request:
+    paths: ['dumb-gods/**', '.github/workflows/dumb-gods.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: dumb-gods-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: dumb-gods
+
+jobs:
+  build:
+    name: Typecheck, test, build, smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dumb-gods/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Simulation + balance tests
+        run: npm test
+      - name: Build single-file game
+        run: npm run build
+      - name: Headless smoke test (boots the game in Chrome, plays, forces an ending)
+        env:
+          CHROMIUM_PATH: /usr/bin/google-chrome
+        run: npm run smoke -- --shots smoke-shots
+      - name: Upload playable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dumb-gods-web
+          path: dumb-gods/dist
+          if-no-files-found: error
+      - name: Upload smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dumb-gods-smoke-screenshots
+          path: dumb-gods/smoke-shots
+          if-no-files-found: ignore
+
+  pages:
+    # Optional GitHub Pages mirror. Turn on Settings > Pages > Source "GitHub Actions",
+    # then add the repository variable ENABLE_PAGES=true.
+    name: Deploy to GitHub Pages
+    if: vars.ENABLE_PAGES == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dumb-gods-web
+          path: site
+      - run: rm -f site/artifact.html
+        working-directory: .
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
