@@ -54,28 +54,60 @@ jobs:
           path: dumb-gods/smoke-shots
           if-no-files-found: ignore
 
-  pages:
-    # Optional GitHub Pages mirror. Turn on Settings > Pages > Source "GitHub Actions",
-    # then add the repository variable ENABLE_PAGES=true.
-    name: Deploy to GitHub Pages
-    if: vars.ENABLE_PAGES == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+  deploy:
+    # Publishes this game to gh-pages/dumb-gods/ and leaves every other folder alone,
+    # so each game deploys on its own schedule. Any branch: the latest green push wins.
+    name: Publish to gh-pages/dumb-gods/
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      contents: write
+    concurrency:
+      group: gh-pages-dumb-gods
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dumb-gods-web
-          path: site
-      - run: rm -f site/artifact.html
-        working-directory: .
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - id: deploy
-        uses: actions/deploy-pages@v4
+          path: build
+      - name: Commit the build to gh-pages/dumb-gods/
+        env:
+          GAME: dumb-gods
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # other games publish to the same branch; if one pushes first, start over from theirs
+          for attempt in 1 2 3 4 5; do
+            rm -rf site
+            if git ls-remote --exit-code --heads "$url" gh-pages >/dev/null; then
+              git clone --quiet --depth 1 --branch gh-pages "$url" site
+            else
+              git init --quiet -b gh-pages site
+              git -C site remote add origin "$url"
+            fi
+            rm -rf "site/$GAME"
+            mkdir -p "site/$GAME"
+            cp build/index.html "site/$GAME/index.html"
+            touch site/.nojekyll
+            git -C site config user.name 'github-actions[bot]'
+            git -C site config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git -C site add -A
+            if git -C site diff --cached --quiet; then
+              echo "Dumb Gods is already up to date on gh-pages"
+              exit 0
+            fi
+            git -C site commit --quiet -m "Publish $GAME from $GITHUB_REF_NAME@${GITHUB_SHA::7}"
+            if git -C site push --quiet origin gh-pages; then
+              echo "Published Dumb Gods to gh-pages/$GAME/"
+              exit 0
+            fi
+            echo "gh-pages moved underneath us, retrying ($attempt)"
+            sleep $((attempt * 3))
+          done
+          exit 1
