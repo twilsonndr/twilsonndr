@@ -100,8 +100,13 @@ for attempt in 1 2 3 4 5; do
   if cut -f4 "$manifest" | grep -qx "$NEW"; then
     echo "$GAME matches an archived build; making it live again without a duplicate archive."
   else
-    id="$(date -u +%Y-%m-%d)-${SHA7}"
-    [ -e "$dir/builds/$id" ] && id="${id}-$(date -u +%H%M%S)"
+    base="$(date -u +%Y-%m-%d)-${SHA7}"
+    id="$base"
+    n=2
+    while [ -e "$dir/builds/$id" ]; do
+      id="$base-$n"
+      n=$((n + 1))
+    done
     mkdir "$dir/builds/$id"
     cp "$BUILD" "$dir/builds/$id/index.html"
     printf '%s\t%s\t%s\t%s\n' "$id" "$(date -u +%Y-%m-%dT%H:%MZ)" "$SOURCE" "$NEW" >> "$manifest"

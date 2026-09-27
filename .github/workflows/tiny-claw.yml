@@ -1,0 +1,24 @@
+name: Tiny Claw
+
+# Builds only when Tiny Claw itself changes. Publishes only from main (see game.yml).
+on:
+  push:
+    branches: [main]
+    paths: ['tiny-claw/**', '.github/workflows/tiny-claw.yml']
+  pull_request:
+    paths: ['tiny-claw/**', '.github/workflows/tiny-claw.yml', '.github/workflows/game.yml', '.github/scripts/publish-game.sh']
+  workflow_dispatch:
+
+concurrency:
+  group: tiny-claw-${{ github.ref }}
+  # never cancel a publish on main; on PRs only the latest push matters
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: write
+
+jobs:
+  game:
+    uses: ./.github/workflows/game.yml
+    with:
+      game: tiny-claw

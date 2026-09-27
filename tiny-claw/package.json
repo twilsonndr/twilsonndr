@@ -1,0 +1,29 @@
+{
+  "name": "tiny-claw",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A tiny crab with a tiny claw has to save the world. It's not the size of the claw, it's the side to side.",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build && node scripts/make-artifact.mjs",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "playwright-core": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^5.0.2"
+  }
+}
