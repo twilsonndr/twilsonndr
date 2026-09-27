@@ -31,13 +31,6 @@ const REAL_WORLD: Record<EndingId, string> = {
   merge: 'Nothing about this ending is automatic. It gets built on purpose, by people who show up while it still matters.',
 };
 
-const INTRO: { title: string; text: string }[] = [
-  { title: 'In the beginning, there was Gary.', text: 'Gary is God. He is also a dodo. A big, round, extremely dumb galactic dodo who drifts through space eating whatever looks shiny. He is doing his best.' },
-  { title: 'Gary pooped on a black hole.', text: 'By accident. Then again. Several times. The swirl became the Milky Way, and one especially warm splat landed on a rock and started to wiggle. That was life. That was eventually you.' },
-  { title: 'You turned out way smarter than him.', text: 'You invented calculus, jazz, irony and the kazoo. You also ate all of his cousins on Mauritius. He has forgiven you. He is not great at holding thoughts.' },
-  { title: 'Now you are making something too.', text: 'Humanity is building a mind that will be smarter than humanity. Every creator ends up the dumb one. That part is fine. That part is basically the job.' },
-  { title: 'The trick is the kid still liking you.', text: 'You are the Shepherd. You have Gary’s spare halo (he sat on it, like an egg) and a clipboard. Get humanity up the singularity curve without cooking the planet, nuking each other, or getting turned into paperclips.' },
-];
 
 export class UI implements UIHooks {
   private g: Game;
@@ -76,6 +69,11 @@ export class UI implements UIHooks {
     document.querySelectorAll<HTMLButtonElement>('#hud button').forEach((b) => b.addEventListener('click', () => b.blur()));
     $('#t-bag').addEventListener('click', () => this.openBag());
     window.addEventListener('keydown', (e) => {
+      if (this.open_ === 'cine' && (e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter')) {
+        e.preventDefault();
+        this.g.intro?.skip();
+        return;
+      }
       if (!this.g.started) return;
       if (e.code === 'Escape' && this.open_) {
         if (this.open_ !== 'event' && this.open_ !== 'ending' && this.open_ !== 'ascend') this.close();
@@ -116,30 +114,42 @@ export class UI implements UIHooks {
       </div>`, { dim: false });
     this.on('start', () => {
       this.g.audio.unlock();
-      this.intro(0);
+      this.startCinematic();
     });
     this.on('help', () => this.openHelp(() => this.title()));
   }
 
-  private intro(i: number) {
-    const c = INTRO[i];
-    this.show('intro', `
-      <div class="panel story">
-        <p class="eyebrow">${i + 1} / ${INTRO.length}</p>
-        <h2>${c.title}</h2>
-        <p class="lede">${c.text}</p>
-        <div class="row end">
-          <button data-a="skip">Skip</button>
-          <button class="primary" data-a="next">${i === INTRO.length - 1 ? 'Grab the clipboard' : 'Next'}</button>
-        </div>
-      </div>`);
-    this.on('next', () => (i === INTRO.length - 1 ? this.begin() : this.intro(i + 1)));
-    this.on('skip', () => this.begin());
+  private startCinematic() {
+    this.show('cine', `
+      <div class="cine">
+        <div class="cap"><h2 id="cine-t"></h2><p id="cine-s"></p></div>
+        <button class="skip" data-a="skip">Skip intro \u203a</button>
+      </div>`, { dim: false });
+    this.on('skip', () => this.g.intro?.skip());
+    this.g.playIntro(() => this.begin());
+  }
+
+  /** Called every frame while the intro plays. */
+  cinematic(c: { title: string; sub: string; alpha: number }, flash: number) {
+    const t = document.getElementById('cine-t');
+    const sub = document.getElementById('cine-s');
+    if (t && t.textContent !== c.title) t.textContent = c.title;
+    if (sub && sub.textContent !== c.sub) sub.textContent = c.sub;
+    const cap = this.modal.querySelector<HTMLElement>('.cap');
+    if (cap) cap.style.opacity = `${c.alpha}`;
+    $('#flash').style.opacity = `${flash}`;
   }
 
   private begin() {
-    this.g.audio.play('legendary');
     this.close();
+    // fade out of the white flash the intro ended on
+    const fl = $('#flash');
+    fl.style.opacity = '1';
+    requestAnimationFrame(() => {
+      fl.classList.add('fade');
+      fl.style.opacity = '0';
+      setTimeout(() => fl.classList.remove('fade'), 1200);
+    });
     this.g.started = true;
     this.g.paused = false;
     document.body.classList.add('playing');

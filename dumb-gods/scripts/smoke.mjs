@@ -43,10 +43,23 @@ await page.goto(url, { waitUntil: 'load' });
 await wait(1500);
 await shot('01-title');
 await page.click('[data-a="start"]');
-await wait(300);
-await shot('02-intro');
+await wait(500);
+// the whole cinematic has to be steppable without errors, then a few key beats get a screenshot
+const introOk = await page.evaluate(() => {
+  const i = window.dumbGods.intro;
+  if (!i) return false;
+  for (let t = 0; t <= 49.6; t += 0.1) i.seek(t);
+  return true;
+});
+if (!introOk) errors.push('intro cinematic did not start');
+for (const [t, name] of [[3, '02a-gary'], [10.2, '02b-plop'], [17.5, '02c-galaxy'], [22.6, '02d-earth'], [27.6, '02e-cells'], [34.4, '02f-march'], [38.2, '02g-ape'], [47.6, '02h-shepherd']]) {
+  await page.evaluate((x) => window.dumbGods.intro?.seek(x), t);
+  await wait(300);
+  await shot(name);
+}
 await page.click('[data-a="skip"]');
-await wait(600);
+await wait(800);
+if (!(await page.evaluate(() => window.dumbGods.started && !window.dumbGods.intro))) errors.push('skipping the intro did not start the game');
 
 // walk around and zap for a bit
 await page.keyboard.down('KeyW');

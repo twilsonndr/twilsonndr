@@ -2,7 +2,7 @@ export type Sfx =
   | 'swing' | 'hit' | 'crit' | 'hurt' | 'pickup' | 'magic' | 'rare' | 'legendary' | 'set'
   | 'death' | 'recycle' | 'protest' | 'boycott' | 'legislate' | 'zap' | 'shield' | 'ui'
   | 'stairs' | 'roar' | 'honk' | 'kill' | 'shoot' | 'heal' | 'recruit' | 'boom' | 'coin'
-  | 'alarm' | 'wake';
+  | 'alarm' | 'wake' | 'plop' | 'whoosh' | 'bloop';
 
 /** Tiny procedural synth. No audio files, no problem. */
 export class Audio {
@@ -125,6 +125,12 @@ export class Audio {
       case 'roar': this.tone(70, 1.2, 'sawtooth', 0.25, 0.6); this.hiss(1.0, 0.5, 250, 0.5, 0, 'lowpass'); break;
       case 'honk': this.tone(233, 0.7, 'sawtooth', 0.14); this.tone(277, 0.7, 'sawtooth', 0.14); break;
       case 'recruit': [392, 494, 587, 784].forEach((f, i) => this.tone(f, 0.3, 'triangle', 0.12, 1, i * 0.09)); break;
+      case 'plop':
+        this.tone(320 * r, 0.22, 'sine', 0.3, 0.25);
+        this.hiss(0.12, 0.25, 400, 0.8, 0.02, 'lowpass');
+        break;
+      case 'whoosh': this.hiss(0.9, 0.35, 900, 0.6, 0, 'lowpass'); this.tone(140, 0.8, 'sine', 0.12, 2.2); break;
+      case 'bloop': this.tone(420 * r, 0.18, 'sine', 0.18, 2.1); this.tone(640 * r, 0.14, 'triangle', 0.08, 1.6, 0.08); break;
       case 'alarm': for (let i = 0; i < 3; i++) this.tone(880, 0.22, 'square', 0.08, 0.7, i * 0.3); break;
       case 'wake':
         [131, 196, 262, 392, 523].forEach((f, i) => this.tone(f, 1.4, 'sine', 0.12, 1, i * 0.18));

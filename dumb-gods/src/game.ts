@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { ENEMIES, FACTION, FACTIONS, QUESTS, RES, RES_IDS, type EnemyKind, type FactionId, type Res } from './content';
 import { Audio } from './engine/audio';
+import { Intro, type Caption } from './intro';
 import { Input } from './engine/input';
 import { Renderer } from './engine/renderer';
 import { makeEnemy, makePickup, makePlayer, type EnemyModel } from './models';
@@ -22,6 +23,7 @@ export interface UIHooks {
   ending(): void;
   questChanged(): void;
   modalOpen(): boolean;
+  cinematic(c: Caption, flash: number): void;
 }
 
 interface Enemy {
@@ -147,8 +149,34 @@ export class Game {
 
   // ---------- main update ----------
 
+  /** Play the opening cinematic, then call onDone. */
+  playIntro(onDone: () => void) {
+    this.intro = new Intro(this.audio);
+    this.introDone = onDone;
+    this.renderer.setGrade({ vignette: 0.4, sat: 1.1, haze: 0, warmth: 0.05, smog: 0, glow: 0 });
+  }
+
+  private updateIntro(dt: number) {
+    const intro = this.intro!;
+    this.input.update(dt);
+    this.input.flush();
+    intro.update(dt);
+    this.ui.cinematic(intro.caption(), intro.flash());
+    this.renderer.setScene(intro.scene, intro.camera);
+    this.renderer.render(dt, this.time);
+    if (intro.done) {
+      this.renderer.setScene(this.world.scene, this.camera);
+      intro.dispose();
+      this.intro = null;
+      const cb = this.introDone;
+      this.introDone = null;
+      cb?.();
+    }
+  }
+
   update(dt: number) {
     this.time += dt;
+    if (this.intro) return this.updateIntro(dt);
     const s = this.sim;
     const live = this.started && !this.paused && !s.over && !this.ui.modalOpen();
     this.input.update(dt);
@@ -246,6 +274,8 @@ export class Game {
   }
 
   pendingEvent: ReturnType<typeof pickEvent> = null;
+  intro: Intro | null = null;
+  private introDone: (() => void) | null = null;
   private endingShown = false;
 
   // ---------- player ----------
