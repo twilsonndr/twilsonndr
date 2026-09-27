@@ -54,7 +54,9 @@ const skipDialog = async () => {
 const waitPhase = async (phase, ms = 8000) => {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
-    if ((await g(() => window.tinyClaw.phase)) === phase) return true;
+    const now = await g(() => window.tinyClaw.phase);
+    if (now === phase) return true;
+    if (now === 'cine') await page.click('#cine').catch(() => {});
     await skipDialog();
     await wait(200);
   }
@@ -125,9 +127,12 @@ await g(() => {
     s.step(0.016, { mx: 0, mz: 0, pinch: true, dash: false });
   }
 });
-await wait(2200);
-await shot('07-chapter1-outro');
-await waitPhase('play', 15000);
+// clearing a stage zooms in on Sidney for a victory dance
+await waitPhase('dance', 8000);
+await g(() => (window.tinyClaw.r.dance.t = 0.9));
+await wait(400);
+await shot('07-victory-dance');
+await waitPhase('play', 20000);
 
 // chapter 2: brigade and a tide wall
 await g(() => {
@@ -138,14 +143,33 @@ await g(() => {
 });
 await simWait(2.2);
 await shot('08-brigade');
+// a curling tide wall close up
+await g(() => {
+  const s = window.tinyClaw.sim;
+  for (const w of s.waves) w.z = 1.5;
+});
+await wait(300);
+await shot('08b-wave');
 const ch2 = await g(() => ({ ch: window.tinyClaw.sim.chapter, minions: window.tinyClaw.sim.minions.length }));
 if (ch2.ch !== 1 || ch2.minions < 1) errors.push(`chapter 2 did not start properly: ${JSON.stringify(ch2)}`);
 await g(() => {
   const s = window.tinyClaw.sim;
   s.minionsDown = 8;
 });
-await wait(1800);
-await waitPhase('play', 15000);
+// outro, then the Moon-grab cutscene
+await waitPhase('cine', 20000);
+for (const [t, name] of [
+  [3.9, '09a-cine-reach'],
+  [6.3, '09b-cine-yoink'],
+  [10.8, '09c-cine-tides'],
+]) {
+  await g((tt) => (window.tinyClaw.r.cineT = tt), t);
+  await wait(500);
+  await shot(name);
+}
+const tide = await g(() => window.tinyClaw.r.world.tide);
+if (!(tide > 0.9)) errors.push(`tides did not go haywire in the cutscene: ${tide}`);
+await waitPhase('play', 20000);
 
 // chapter 3: the Admiral
 await g(() => {
@@ -155,7 +179,7 @@ await g(() => {
   s.boss.step = 0;
 });
 await simWait(0.9);
-await shot('09-boss-slam');
+await shot('10-boss-slam');
 await g(() => {
   const s = window.tinyClaw.sim;
   s.boss.state = 'lock';
@@ -170,12 +194,14 @@ await g(() => {
   s.p.z = s.boss.screwZ;
 });
 await wait(100);
-await shot('10-screw');
+await shot('11-screw');
 await page.keyboard.press('Space');
 await wait(500);
-await shot('11-screw-loose');
+await shot('12-screw-loose');
 const screws = await g(() => window.tinyClaw.sim.boss.screws);
 if (screws !== 4) errors.push(`screw pinch did not land: ${screws}`);
+// the first screw earns a dance; wait for control to come back
+await waitPhase('play', 20000);
 
 // finish him
 await g(() => {
@@ -189,13 +215,14 @@ await g(() => {
   s.step(0.016, { mx: 0, mz: 0, pinch: true, dash: false });
 });
 await wait(2500);
-await shot('12-boss-down');
-await waitPhase('won', 8000);
-await wait(3000);
-await shot('13-outro');
+await shot('13-boss-down');
+for (let i = 0; i < 100 && !(await page.$('#dialog:not([hidden])')); i++) await wait(200);
+if (!(await page.$('#dialog:not([hidden])'))) errors.push('ending dialog never showed');
+await wait(600);
+await shot('14-outro');
 await skipDialog();
 await wait(800);
-await shot('14-win');
+await shot('15-win');
 if (!(await page.$('[data-a="again"]'))) errors.push('win screen did not show');
 
 // phone: touch emulation, joystick and PINCH button
@@ -222,7 +249,7 @@ await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{
 await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 150, y: 600 }] });
 const tStart = await pp.evaluate(() => window.tinyClaw.sim.time);
 for (let i = 0; i < 100 && (await pp.evaluate(() => window.tinyClaw.sim.time)) - tStart < 0.3; i++) await pp.waitForTimeout(100);
-await pp.screenshot({ path: shots ? join(shots, '15-phone.png') : '/dev/null' });
+await pp.screenshot({ path: shots ? join(shots, '16-phone.png') : '/dev/null' });
 await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 const x1 = await pp.evaluate(() => window.tinyClaw.sim.p.x);
 if (!(x1 > x0 + 0.5)) errors.push(`touch joystick did not move the crab: ${x0} -> ${x1}`);

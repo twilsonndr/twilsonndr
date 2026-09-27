@@ -13,6 +13,7 @@
   </head>
   <body>
     <canvas id="c"></canvas>
+    <div id="vignette"></div>
     <div id="floats"></div>
 
     <div id="hud" hidden>
@@ -26,8 +27,8 @@
         <button id="btn-mute" aria-label="Toggle sound">🔊</button>
         <button id="btn-pause" aria-label="Pause">❚❚</button>
       </div>
-      <div id="bossbar" hidden>
-        <p>Admiral Clawdius Maximus <em>screws remaining</em></p>
+      <div id="bossbar" hidden title="Screws left in the Admiral's Moon Pincher">
+        <span>Admiral</span>
         <div class="screws"></div>
       </div>
       <div id="wiggle"><span>SIDE TO SIDE</span><i></i></div>
@@ -40,6 +41,12 @@
     </div>
 
     <div id="toast" role="status"></div>
+    <div id="banner" hidden></div>
+    <div id="cine" hidden>
+      <div class="bar top"></div>
+      <div class="bar bottom"><p class="caption"></p></div>
+      <button class="skip" data-a="cine-skip">Skip ⏭</button>
+    </div>
     <div id="card" hidden></div>
 
     <div id="dialog" hidden>

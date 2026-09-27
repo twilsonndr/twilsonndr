@@ -159,6 +159,29 @@ export class Audio {
   combo(n: number) {
     this.tone(300 + n * 60, 0.06, 'triangle', 0.08);
   }
+  clack() {
+    // tiny claws clacking together: two bright clicks, slightly detuned each time
+    const f = 2600 + Math.random() * 900;
+    this.noise(0.03, 0.35, 'bandpass', f);
+    this.tone(f * 0.8, 0.03, 'square', 0.06);
+  }
+  cheer() {
+    [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.16, 'triangle', 0.16, i * 0.06));
+    this.noise(0.9, 0.18, 'bandpass', 1800, 900, 0.1);
+  }
+  rumble() {
+    this.tone(45, 2.2, 'sine', 0.6, 0, 30);
+    this.noise(2, 0.35, 'lowpass', 220, 90);
+  }
+  clamp() {
+    this.tone(140, 0.25, 'square', 0.25, 0, 70);
+    this.noise(0.15, 0.6, 'bandpass', 900);
+    this.tone(1400, 0.4, 'triangle', 0.1, 0.05, 700);
+  }
+  yoink() {
+    this.tone(300, 0.6, 'sawtooth', 0.14, 0, 1400);
+    this.noise(0.7, 0.3, 'bandpass', 400, 3000);
+  }
   blip() {
     this.tone(880, 0.04, 'square', 0.04);
   }

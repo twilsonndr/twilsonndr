@@ -19,9 +19,13 @@ Three chapters:
 
 1. **Nobody Believes in Sidney.** Snip six-pack rings off trapped baby turtles, fish and a seal. Dodge Steven the seagull (MINE!). Everyone you free joins your conga line.
 2. **The Big Claw Brigade.** Purple brutes in sunglasses with claws the size of sofas. Flank them. Pinch their pinky toes.
+Between chapters 2 and 3 there's a cutscene: the Admiral surfaces, reaches an absurdly long arm into the sky and yanks the Moon down. The tides go haywire: the west beach floods (Gerald and Linda end up floating) and the east side drains to cracked seabed with stranded fish. It stays that way until you win.
+
 3. **The Moon Pincher.** The Admiral slams his claw into the sand, fires bubbles and sends tide walls. Every time his claw gets stuck, a tiny screw pops loose that only a tiny claw can reach. Five screws and the whole thing falls apart like cheap patio furniture.
 
 The townsfolk heckle you the whole way (Gerald the Clam, Starla the Starfish, Linda who lives in a yogurt cup, Dr. Pufferton) and come round one at a time. Gerald holds out until the very end. As the Admiral wins, the sky darkens and the ocean literally stops moving; beat him and the waves come back.
+
+Clear a stage (free everyone, down your first big claw, pack up the brigade, pop the first screw, save the Moon) and the camera zooms in while Sidney does a victory dance: two spins, tiny claws up, clack clack clack.
 
 There's a *believe-in-yourself mode* (no damage) in the pause menu, and it's offered after a loss, for anyone who just wants the story.
 
@@ -55,11 +59,12 @@ npm run smoke     # boots the build in headless Chromium, plays every chapter, t
 
 The test suite includes a bot that plays all three chapters with real inputs (no god mode) across several seeds. It has to win in under six deaths and can't finish too fast, so balance changes that make the game impossible or trivial fail CI.
 
-The smoke test looks for Chromium at `CHROMIUM_PATH`, `/opt/pw-browsers/chromium`, `/usr/bin/chromium` or `/usr/bin/google-chrome`. Pass `-- --shots <dir>` to save screenshots. Add `?lq` or `?hq` to the URL to force low or high graphics quality.
+The smoke test looks for Chromium at `CHROMIUM_PATH`, `/opt/pw-browsers/chromium`, `/usr/bin/chromium` or `/usr/bin/google-chrome`. Pass `-- --shots <dir>` to save screenshots. Add `?lq` or `?hq` to the URL to pin low or high graphics quality (otherwise it adapts).
 
 ## How it's built
 
-- **Three.js** with toon shading, soft shadows, bloom on desktop, and a sea shader whose wave motion is tied to how close the Admiral is to winning.
+- **Three.js** with toon shading, shadows, and custom shaders for the sky, the sea (its wave motion and tide level follow the story) and the curling tide walls.
+- **Adaptive quality.** The renderer starts at a sensible tier for the device, watches real frame times, and steps resolution and shadow quality down when frames run long (or up once when there's lots of headroom). Static scenery is merged into a handful of draw calls, and only large meshes cast shadows. `?hq` / `?lq` pin a tier.
 - **Everything is procedural.** Every model is built from primitives in `src/models.ts`, every sound and the little steel-drum calypso loop come from a WebAudio synth, and there are no asset files.
 - **The simulation is pure TypeScript** (`src/sim.ts`) with no rendering dependencies, deterministic per seed, so it's unit tested and balance tested headless.
 - **Vite + vite-plugin-singlefile** bundle everything into one HTML file that can be hosted anywhere.

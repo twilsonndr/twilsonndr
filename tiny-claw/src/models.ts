@@ -1,5 +1,6 @@
 // Every model in the game, built from primitives. No asset files.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 let gradientMap: THREE.DataTexture | null = null;
 function toonRamp() {
@@ -26,6 +27,22 @@ export function toon(color: THREE.ColorRepresentation, opts: { emissive?: THREE.
   });
   if (!opts.transparent) matCache.set(key, m);
   return m;
+}
+
+/** Bake many small static meshes that share a material into one draw call. */
+function mergeInto(parent: THREE.Object3D, parts: THREE.Mesh[], shadow = false) {
+  if (!parts.length) return;
+  const geos = parts.map((p) => {
+    p.updateMatrix();
+    const g = (p.geometry.index ? p.geometry.toNonIndexed() : p.geometry.clone()).applyMatrix4(p.matrix);
+    for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(name)) g.deleteAttribute(name);
+    return g;
+  });
+  const merged = mergeGeometries(geos, false);
+  if (!merged) return;
+  const out = new THREE.Mesh(merged, parts[0].material);
+  out.castShadow = shadow;
+  parent.add(out);
 }
 
 function mesh(geo: THREE.BufferGeometry, mat: THREE.Material, shadow = true) {
@@ -165,6 +182,7 @@ export function makeCrab(o: CrabOpts): CrabRig {
   under.position.y = 0.38;
   body.add(under);
   // freckles on top
+  const freckles: THREE.Mesh[] = [];
   for (const [x, z, r] of [
     [-0.22, -0.12, 0.07],
     [0.2, -0.18, 0.06],
@@ -175,8 +193,9 @@ export function makeCrab(o: CrabOpts): CrabRig {
     const f = mesh(new THREE.SphereGeometry(r, 8, 6), toon(new THREE.Color(o.color).multiplyScalar(0.75)), false);
     f.scale.y = 0.35;
     f.position.set(x, 0.8, z);
-    body.add(f);
+    freckles.push(f);
   }
+  mergeInto(body, freckles);
 
   // eyes on stalks
   const eyeR = 0.13;
@@ -484,12 +503,14 @@ export function makeClam(): Critter {
   top.scale.set(1, 0.5, 0.8);
   top.position.z = 0.35;
   lid.add(top);
+  const ridges: THREE.Mesh[] = [];
   for (let i = -3; i <= 3; i++) {
     const ridge = mesh(new THREE.BoxGeometry(0.03, 0.02, 0.9), toon(0xb8a17c), false);
     ridge.position.set(i * 0.14, 0.26, 0.35);
     ridge.rotation.x = -0.35;
-    lid.add(ridge);
+    ridges.push(ridge);
   }
+  mergeInto(lid, ridges);
   root.add(lid);
   const inside = mesh(new THREE.SphereGeometry(0.45, 16, 10), toon(0xffb3a7));
   inside.scale.set(1, 0.3, 0.8);
@@ -534,12 +555,14 @@ export function makeStarfish(): Critter {
   );
   star.position.set(0, 0.8, -0.1);
   root.add(star);
+  const dots: THREE.Mesh[] = [];
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
     const dot = mesh(new THREE.SphereGeometry(0.04, 6, 4), toon(0xffd29a), false);
     dot.position.set(Math.cos(a) * 0.35, 0.8 + Math.sin(a) * 0.35, 0.18);
-    root.add(dot);
+    dots.push(dot);
   }
+  mergeInto(root, dots);
   const eyes = eyesOn(root, 0.1, 0.92, 0.2, 0.12);
   const mouth = mesh(new THREE.TorusGeometry(0.07, 0.02, 6, 12, Math.PI), toon(0x7a2a10), false);
   mouth.rotation.z = Math.PI;
@@ -602,6 +625,7 @@ export function makePuffer(): Critter {
   bodyG.add(belly);
   const spike = new THREE.ConeGeometry(0.04, 0.16, 5);
   const spikeM = toon(0xe0a800);
+  const spikes: THREE.Mesh[] = [];
   for (let i = 0; i < 26; i++) {
     const y = 1 - (i / 25) * 2;
     const r = Math.sqrt(1 - y * y);
@@ -610,8 +634,9 @@ export function makePuffer(): Critter {
     const s = mesh(spike, spikeM, false);
     s.position.copy(n).multiplyScalar(0.46);
     s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
-    bodyG.add(s);
+    spikes.push(s);
   }
+  mergeInto(bodyG, spikes);
   const tail = mesh(new THREE.ConeGeometry(0.2, 0.3, 4), toon(0xffb000));
   tail.rotation.x = -Math.PI / 2;
   tail.position.z = -0.55;
@@ -784,18 +809,112 @@ export function makeKelp() {
   return { root: g, blades };
 }
 
-export function makeTideWall(width: number) {
+// ---------- tide walls: a curling wave, not a box ----------
+
+// Cross-sections in (z, y); the wave travels toward +z, i.e. toward the camera.
+const WAVE_BACK: [number, number][] = [
+  [-2.2, 0],
+  [-1.4, 0.45],
+  [-0.7, 1.05],
+  [-0.15, 1.6],
+  [0.3, 1.95],
+  [0.75, 2.02],
+  [1.1, 1.82],
+  [1.28, 1.48],
+  [1.12, 1.18],
+];
+const WAVE_FACE: [number, number][] = [
+  [0.95, 0],
+  [0.6, 0.25],
+  [0.34, 0.7],
+  [0.28, 1.2],
+  [0.42, 1.65],
+  [0.72, 1.92],
+];
+
+function ribbon(path: [number, number][], width: number, v0: number, v1: number) {
+  const nx = Math.max(6, Math.round(width * 2.5));
+  const ny = path.length;
+  const pos: number[] = [];
+  const uv: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= nx; i++) {
+    const u = i / nx;
+    const x = (u - 0.5) * width;
+    // taper where the wave breaks at a gap
+    const edge = Math.min(u * width, (1 - u) * width);
+    const k = THREE.MathUtils.smoothstep(edge, 0, 1.6);
+    const hs = 0.12 + 0.88 * k;
+    for (let j = 0; j < ny; j++) {
+      const [z, y] = path[j];
+      pos.push(x, y * hs * 0.9, z * (0.55 + 0.45 * k));
+      uv.push(u, v0 + (v1 - v0) * (j / (ny - 1)));
+    }
+  }
+  for (let i = 0; i < nx; i++) {
+    for (let j = 0; j < ny - 1; j++) {
+      const a = i * ny + j;
+      const b = (i + 1) * ny + j;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+export function makeWaveMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    uniforms: {
+      time: { value: 0 },
+      deep: { value: new THREE.Color(0x0b6fa8) },
+      bright: { value: new THREE.Color(0x4fe3e0) },
+      sky: { value: new THREE.Color(0xd8f4ff) },
+    },
+    vertexShader: `
+      uniform float time;
+      varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+      void main(){
+        vUv = uv;
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        float wob = sin(wp.x*1.7 + time*5.0)*0.06 + sin(wp.x*0.6 - time*3.0)*0.08;
+        wp.y += wob * uv.y;
+        wp.z += wob * 0.8 * smoothstep(0.5, 1.0, uv.y);
+        vW = wp.xyz;
+        vN = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }`,
+    fragmentShader: `
+      uniform float time; uniform vec3 deep; uniform vec3 bright; uniform vec3 sky;
+      varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+      void main(){
+        float v = vUv.y;
+        vec3 col = mix(deep, bright, smoothstep(0.05, 0.6, v));
+        vec3 V = normalize(cameraPosition - vW);
+        float fres = pow(1.0 - abs(dot(normalize(vN), V)), 2.0);
+        col = mix(col, sky, fres * 0.4);
+        float n = sin(vW.x*3.1 + time*2.0)*0.5 + sin(vW.x*7.3 - time*3.3)*0.25 + sin(v*40.0 + vW.x*2.0)*0.25;
+        float foam = smoothstep(0.66, 0.82, v + n*0.07);
+        float streak = smoothstep(0.82, 1.0, sin(vW.x*8.0 + v*7.0 + time*1.5)) * smoothstep(0.15, 0.6, v) * 0.35;
+        float base = smoothstep(0.08, 0.0, v) * 0.6;
+        col = mix(col, vec3(1.0), clamp(foam + streak + base, 0.0, 1.0));
+        gl_FragColor = vec4(col, mix(0.8, 0.96, smoothstep(0.0, 0.5, v)));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  });
+}
+
+export function makeCurlWave(width: number, mat: THREE.Material) {
   const g = new THREE.Group();
-  const water = new THREE.Mesh(
-    new THREE.BoxGeometry(width, 1.4, 0.9, Math.max(1, Math.round(width * 2)), 3, 1),
-    new THREE.MeshToonMaterial({ color: 0x2fb6e8, gradientMap: toonRamp(), transparent: true, opacity: 0.82, emissive: 0x0a4a70, emissiveIntensity: 0.3 }),
-  );
-  water.position.y = 0.7;
-  g.add(water);
-  const foam = mesh(new THREE.CapsuleGeometry(0.28, Math.max(0.01, width - 0.56), 4, 8), toon(0xf4fbff, { emissive: 0x8fdfff, emissiveIntensity: 0.25 }), false);
-  foam.rotation.z = Math.PI / 2;
-  foam.position.set(0, 1.45, 0.1);
-  g.add(foam);
+  const back = new THREE.Mesh(ribbon(WAVE_BACK, width, 0, 1), mat);
+  const face = new THREE.Mesh(ribbon(WAVE_FACE, width, 0.02, 0.78), mat);
+  g.add(back, face);
   return g;
 }
 

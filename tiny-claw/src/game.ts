@@ -3,11 +3,11 @@
 import { Audio } from './audio';
 import { CHAPTERS, GAME_OVER_LINES, INTRO, TAGLINE, rankFor } from './content';
 import { Controls } from './input';
-import { Renderer } from './render';
-import { NO_INPUT, Sim, type SimEvent } from './sim';
+import { CINE, Renderer } from './render';
+import { BOSS_SCREWS, NO_INPUT, Sim, type SimEvent } from './sim';
 import { UI, esc } from './ui';
 
-type Phase = 'title' | 'story' | 'play' | 'paused' | 'over' | 'won';
+type Phase = 'title' | 'story' | 'play' | 'paused' | 'over' | 'won' | 'dance' | 'cine';
 
 export class Game {
   sim = new Sim(Math.floor(Math.random() * 1e9));
@@ -22,6 +22,11 @@ export class Game {
   private tipQueue: { at: number; text: string }[] = [];
   private best = 0;
   private started = performance.now();
+  private danceThen: (() => void) | null = null;
+  private clackT = 0;
+  private waits: { t: number; fn: () => void }[] = [];
+  private cineDone: (() => void) | null = null;
+  private cineBeats = new Set<string>();
 
   constructor(canvas: HTMLCanvasElement) {
     this.r = new Renderer(canvas);
@@ -29,8 +34,10 @@ export class Game {
     this.controls = new Controls(canvas, document.getElementById('stick')!, document.getElementById('knob')!);
     this.controls.onAnyInput = () => this.audio.unlock();
     this.controls.onAdvance = () => {
-      if (this.ui.dialogOpen()) this.ui.advance();
+      if (this.phase === 'cine') this.r.skipCine();
+      else if (this.ui.dialogOpen()) this.ui.advance();
     };
+    document.getElementById('cine')!.addEventListener('click', () => this.r.skipCine());
     this.controls.onPause = () => this.togglePause();
     this.controls.onMute = () => this.toggleMute();
     document.addEventListener('pointerdown', () => this.audio.unlock());
@@ -57,7 +64,19 @@ export class Game {
     this.syncMuteButton();
   }
 
+  /** Drop any in-flight dance, cutscene or scheduled beat. */
+  private resetShow() {
+    this.waits = [];
+    this.danceThen = null;
+    this.cineDone = null;
+    this.r.dance = null;
+    this.r.cineT = null;
+    this.ui.cine(false);
+    this.ui.banner(null);
+  }
+
   newGame() {
+    this.resetShow();
     this.audio.unlock();
     this.sim = new Sim(Math.floor(Math.random() * 1e9));
     this.sim.god = this.easy;
@@ -136,6 +155,7 @@ export class Game {
   }
 
   private toTitle() {
+    this.resetShow();
     this.phase = 'title';
     this.ui.clearFloats();
     this.ui.clearToasts();
@@ -176,10 +196,90 @@ export class Game {
     this.beginPlay();
   }
 
+  /**
+   * Zoom in on Sidney for a spin-and-clack victory dance. Mid-fight dances pause the
+   * action and hand it back; chapter-end dances go on to `then`.
+   */
+  private dance(label: string, then?: () => void) {
+    if (!then && (this.phase !== 'play' || this.sim.state !== 'play')) return;
+    this.phase = 'dance';
+    this.danceThen =
+      then ??
+      (() => {
+        this.phase = 'play';
+        this.controls.clearQueued();
+      });
+    this.clackT = 0;
+    this.ui.clearFloats();
+    this.ui.clearToasts();
+    this.r.startDance(2.6);
+    this.ui.banner(label);
+    this.audio.cheer();
+  }
+
+  /** Run fn after `secs` of game time (frame-driven, so slow frames don't skip beats). */
+  private wait(secs: number, fn: () => void) {
+    this.waits.push({ t: secs, fn });
+  }
+
+  private runCine(done: () => void) {
+    this.phase = 'cine';
+    this.cineDone = done;
+    this.cineBeats.clear();
+    this.ui.clearToasts();
+    this.ui.cine(true);
+    this.r.startCine();
+  }
+
+  /** Captions, sound and heckles, keyed to the cutscene clock. */
+  private cineBeat(t: number) {
+    const beat = (key: string, at: number, fn: () => void) => {
+      if (t >= at && !this.cineBeats.has(key)) {
+        this.cineBeats.add(key);
+        fn();
+      }
+    };
+    const a = this.audio;
+    beat('c0', 0.2, () => this.ui.caption('Meanwhile, out past the reef...'));
+    beat('rise', CINE.rise, () => {
+      a.rumble();
+      this.ui.caption('Admiral Clawdius Maximus reaches for the Moon.');
+    });
+    beat('clamp', CINE.clamp, () => {
+      a.clamp();
+      this.ui.caption('*PINCH*');
+    });
+    beat('yank', CINE.yank, () => {
+      a.yoink();
+      this.ui.caption('YOINK.');
+    });
+    beat('land', CINE.land - 0.2, () => a.slam(true));
+    beat('tide', CINE.tideFrom - 0.2, () => {
+      a.wave();
+      this.ui.caption('No Moon, no tides. Well... weird tides.');
+    });
+    beat('split', CINE.tideFrom + 1.2, () => this.ui.caption('The west beach floods. The east side drains bone dry.'));
+    const heckle = (key: string, at: number, who: string, text: string) =>
+      beat(key, at, () => {
+        const head = this.r.doubterHead(who);
+        if (head) this.ui.bubble(who, text, () => ({ ...head, y: head.y + 0.6 }), 2.6, '');
+        this.r.say(who, 2);
+      });
+    heckle('linda', CINE.tideFrom + 1.4, 'linda', 'I live in a boat now!');
+    heckle('puff', CINE.tideFrom + 2.0, 'puff', "I'm a FISH. I NEEDED that!");
+    heckle('gerald', CINE.tideFrom + 2.6, 'gerald', 'I love water. Still the worst day of my life.');
+  }
+
   private win() {
     this.phase = 'won';
     this.ui.clearToasts();
-    setTimeout(() => {
+    // watch the Moon Pincher fall apart, dance, then the ending
+    this.wait(1.8, () => this.dance('MOON SAVED!', () => this.ending()));
+  }
+
+  private ending() {
+    this.phase = 'won';
+    {
       this.ui.dialog(CHAPTERS[2].outro, () => {
         this.audio.fanfare();
         const s = this.sim.stats;
@@ -216,7 +316,7 @@ export class Game {
           },
         );
       });
-    }, 2600);
+    }
   }
 
   private tip(text: string) {
@@ -273,6 +373,7 @@ export class Game {
         break;
       }
       case 'minionDown':
+        if (sim.chapter === 1 && sim.minionsDown === 1) this.wait(0.35, () => this.dance('FIRST BIG CLAW DOWN!'));
         ui.pop('SENT PACKING', x, 2.2, z, 'good', 1.2);
         break;
       case 'minionSpawn': {
@@ -320,6 +421,7 @@ export class Game {
         ui.pop('kelp!', x, 1.8, z, 'good');
         break;
       case 'screw':
+        if (e.n === BOSS_SCREWS - 1) this.wait(0.5, () => this.dance('THE ADMIRAL IS COMING UNSCREWED!'));
         a.screw();
         ui.pop('SCREW LOOSE!', x, 2.4, z, 'mega', 1.4);
         ui.bubble('admiral', e.text ?? '', () => ({ x: 3.2, y: 6.2, z: -12 }), 2.4, 'boss');
@@ -349,13 +451,17 @@ export class Game {
         this.phase = 'story';
         this.ui.clearToasts();
         a.fanfare();
-        setTimeout(() => {
-          this.ui.clearFloats();
-          this.ui.dialog(CHAPTERS[ch].outro, () => {
-            this.sim.start(ch + 1);
-            void this.enterChapter(ch + 1);
-          });
-        }, 1400);
+        this.wait(0.5, () =>
+          this.dance(ch === 0 ? "EVERYONE'S FREE!" : 'BRIGADE: PACKED UP!', () => {
+            this.ui.clearFloats();
+            this.ui.dialog(CHAPTERS[ch].outro, () => {
+              this.sim.start(ch + 1);
+              // before the boss: the Admiral steals the Moon
+              if (ch + 1 === 2) this.runCine(() => void this.enterChapter(2));
+              else void this.enterChapter(ch + 1);
+            });
+          }),
+        );
         break;
       }
       case 'win':
@@ -370,7 +476,7 @@ export class Game {
   update(dt: number) {
     const playing = this.phase === 'play';
     this.audio.setTension(this.sim.chapter === 2 ? 0.7 + (1 - (this.sim.boss?.screws ?? 5) / 5) * 0.3 : this.sim.chapter * 0.25);
-    this.audio.tick(this.phase === 'play' || this.phase === 'story' || this.phase === 'paused');
+    this.audio.tick(this.phase !== 'title' && this.phase !== 'over');
 
     if (playing) {
       const input = this.controls.read();
@@ -388,8 +494,38 @@ export class Game {
       this.sim.state = 'cutscene';
     } else {
       this.controls.read();
-      // the win celebration and the boss collapse keep animating
-      if (this.phase === 'won') this.sim.step(dt, NO_INPUT);
+    }
+
+    if (this.phase === 'dance') {
+      this.clackT -= dt;
+      if (this.clackT <= 0) {
+        this.clackT = 0.16;
+        this.audio.clack();
+      }
+      if (!this.r.dance) {
+        this.ui.banner(null);
+        const then = this.danceThen;
+        this.danceThen = null;
+        then?.();
+      }
+    }
+    if (this.phase === 'cine') {
+      const t = this.r.cineT ?? CINE.end;
+      this.cineBeat(t);
+      if (t >= CINE.end) {
+        this.r.cineT = null;
+        this.ui.cine(false);
+        this.ui.clearFloats();
+        const done = this.cineDone;
+        this.cineDone = null;
+        done?.();
+      }
+    }
+    if (this.waits.length && this.phase !== 'paused') {
+      for (const w of this.waits) w.t -= dt;
+      const due = this.waits.filter((w) => w.t <= 0);
+      this.waits = this.waits.filter((w) => w.t > 0);
+      for (const w of due) w.fn();
     }
 
     for (const e of this.sim.drain()) this.handle(e);

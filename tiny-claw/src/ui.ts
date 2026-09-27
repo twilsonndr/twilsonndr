@@ -15,6 +15,8 @@ interface Floating {
   life: number;
   max: number;
   rise: number;
+  w: number;
+  h: number;
 }
 
 export class UI {
@@ -196,7 +198,7 @@ export class UI {
     el.className = `bubble ${cls}`;
     el.textContent = text;
     $('floats').appendChild(el);
-    const f: Floating = { el, at, life: secs, max: secs, rise: 0 };
+    const f: Floating = { el, at, life: secs, max: secs, rise: 0, w: -1, h: 0 };
     this.floats.push(f);
     this.bubbleByWho.set(who, f);
   }
@@ -207,7 +209,7 @@ export class UI {
     el.textContent = text;
     $('floats').appendChild(el);
     const pos = { x, y, z };
-    this.floats.push({ el, at: () => pos, life: secs, max: secs, rise: 60 });
+    this.floats.push({ el, at: () => pos, life: secs, max: secs, rise: 60, w: -1, h: 0 });
   }
 
   clearFloats() {
@@ -224,18 +226,34 @@ export class UI {
         f.el.remove();
         continue;
       }
+      if (f.w < 0) {
+        f.w = f.el.offsetWidth;
+        f.h = f.el.offsetHeight;
+      }
       const s = this.r.project(at.x, at.y, at.z);
       const u = 1 - f.life / f.max;
-      f.el.style.transform = `translate(${s.x}px, ${s.y - u * f.rise}px) translate(-50%, -100%)`;
-      f.el.style.opacity = s.on ? String(Math.min(1, f.life * 4)) : '0';
+      // whole pixels only: fractional transforms make text render soft
+      const x = Math.round(s.x - f.w / 2);
+      const y = Math.round(s.y - u * f.rise - f.h);
+      f.el.style.transform = `translate(${x}px, ${y}px)`;
+      const op = s.on ? Math.min(1, Math.round(f.life * 40) / 10) : 0;
+      if (f.el.style.opacity !== String(op)) f.el.style.opacity = String(op);
     }
     this.floats = this.floats.filter((f) => f.life > 0 && f.el.isConnected);
   }
 
   // ---------- HUD ----------
 
+  private last: Record<string, string | number | boolean> = {};
+  /** Set a DOM property only when the value actually changed (no per-frame layout work). */
+  private put(key: string, value: string | number | boolean, apply: () => void) {
+    if (this.last[key] === value) return;
+    this.last[key] = value;
+    apply();
+  }
+
   hud(sim: Sim, visible: boolean) {
-    $('hud').hidden = !visible;
+    this.put('visible', visible, () => ($('hud').hidden = !visible));
     if (!visible) return;
     const p = sim.p;
     if (p.hp !== this.lastHp) {
@@ -249,21 +267,56 @@ export class UI {
       this.lastHp = p.hp;
     }
     const o = sim.objective();
-    $('obj').innerHTML = `${esc(o.text)} <b>${o.done} / ${o.goal}</b>`;
-    $('score').textContent = sim.stats.score.toLocaleString();
-    const w = $('wiggle');
+    const objKey = `${o.text}|${o.done}|${o.goal}`;
+    this.put('obj', objKey, () => ($('obj').innerHTML = `${esc(o.text)} <b>${o.done} / ${o.goal}</b>`));
+    this.put('score', sim.stats.score, () => ($('score').textContent = sim.stats.score.toLocaleString()));
     const fill = p.wiggle ? 1 : Math.min(1, p.combo / TUNING.wiggleNeed);
-    w.style.setProperty('--fill', String(fill));
-    w.classList.toggle('ready', p.wiggle);
-    w.querySelector('span')!.textContent = p.wiggle ? 'MEGA SNIP READY' : 'SIDE TO SIDE';
+    this.put('wiggle', `${fill}|${p.wiggle}`, () => {
+      const w = $('wiggle');
+      w.style.setProperty('--fill', String(fill));
+      w.classList.toggle('ready', p.wiggle);
+      w.querySelector('span')!.textContent = p.wiggle ? 'MEGA SNIP READY' : 'SIDE TO SIDE';
+    });
     const b = sim.boss;
-    const bar = $('bossbar');
-    bar.hidden = !(b && sim.chapter === 2);
-    if (b && !bar.hidden) {
-      bar.querySelector('.screws')!.innerHTML = Array.from({ length: BOSS_SCREWS }, (_, i) => `<i class="${i < b.screws ? 'in' : 'out'}"></i>`).join('');
+    const showBoss = !!b && sim.chapter === 2;
+    this.put('bossOn', showBoss, () => ($('bossbar').hidden = !showBoss));
+    if (b && showBoss) {
+      this.put('screws', b.screws, () => {
+        $('bossbar').querySelector('.screws')!.innerHTML = Array.from({ length: BOSS_SCREWS }, (_, i) => `<i class="${i < b.screws ? 'in' : 'out'}"></i>`).join('');
+      });
     }
-    const believers = sim.doubters.filter((d) => d.believes).length;
-    $('belief').textContent = `${believers + sim.followers.length} believe in you`;
+    const believers = sim.doubters.filter((d) => d.believes).length + sim.followers.length;
+    this.put('belief', believers, () => ($('belief').textContent = `${believers} believe in you`));
+  }
+
+  // ---------- victory banner and cutscene letterbox ----------
+
+  banner(text: string | null) {
+    const el = $('banner');
+    if (!text) {
+      el.hidden = true;
+      return;
+    }
+    el.textContent = text;
+    el.hidden = false;
+    el.classList.remove('go');
+    void el.offsetWidth;
+    el.classList.add('go');
+  }
+
+  cine(on: boolean) {
+    const el = $('cine');
+    el.hidden = !on;
+    el.classList.toggle('on', on);
+    if (!on) el.querySelector('.caption')!.textContent = '';
+  }
+
+  caption(text: string) {
+    const c = $('cine').querySelector<HTMLElement>('.caption')!;
+    c.textContent = text;
+    c.classList.remove('in');
+    void c.offsetWidth;
+    c.classList.add('in');
   }
 
   frame(dt: number, blip: () => void) {
