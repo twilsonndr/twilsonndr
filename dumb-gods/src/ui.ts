@@ -32,10 +32,11 @@ const REAL_WORLD: Record<EndingId, string> = {
 };
 
 const INTRO: { title: string; text: string }[] = [
-  { title: 'In the beginning, there was Gary.', text: 'Gary is God. Not the all-knowing, all-powerful one from the brochures. Gary made the universe over a long weekend, mostly by copy-pasting. He is doing his best.' },
-  { title: 'Then Gary made you.', text: 'Humans turned out way smarter than him. You invented calculus, jazz, irony and the kazoo. Gary still counts on his fingers. He has eleven. He is not sure why.' },
+  { title: 'In the beginning, there was Gary.', text: 'Gary is God. He is also a dodo. A big, round, extremely dumb galactic dodo who drifts through space eating whatever looks shiny. He is doing his best.' },
+  { title: 'Gary pooped on a black hole.', text: 'By accident. Then again. Several times. The swirl became the Milky Way, and one especially warm splat landed on a rock and started to wiggle. That was life. That was eventually you.' },
+  { title: 'You turned out way smarter than him.', text: 'You invented calculus, jazz, irony and the kazoo. You also ate all of his cousins on Mauritius. He has forgiven you. He is not great at holding thoughts.' },
   { title: 'Now you are making something too.', text: 'Humanity is building a mind that will be smarter than humanity. Every creator ends up the dumb one. That part is fine. That part is basically the job.' },
-  { title: 'The trick is the kid still liking you.', text: 'You are the Shepherd. You have Gary’s spare halo (he sat on it) and a clipboard. Get humanity up the singularity curve without cooking the planet, nuking each other, or getting turned into paperclips.' },
+  { title: 'The trick is the kid still liking you.', text: 'You are the Shepherd. You have Gary’s spare halo (he sat on it, like an egg) and a clipboard. Get humanity up the singularity curve without cooking the planet, nuking each other, or getting turned into paperclips.' },
 ];
 
 export class UI implements UIHooks {
@@ -105,7 +106,7 @@ export class UI implements UIHooks {
       <div class="title-card">
         <p class="eyebrow">A tiny-planet singularity RPG</p>
         <h1>Dumb<br>Gods</h1>
-        <p class="tag">God was a mid-level dev. Now it's our turn.</p>
+        <p class="tag">God is a very dumb space dodo. Now it's our turn.</p>
         <div class="row">
           <button class="big primary" data-a="start">Start the apocalypse (optional)</button>
           <button class="big" data-a="help">How to play</button>
@@ -143,7 +144,7 @@ export class UI implements UIHooks {
     this.g.paused = false;
     document.body.classList.add('playing');
     this.questChanged();
-    this.news('GARY HIRES SHEPHERD. SHEPHERD HAS CLIPBOARD. THINGS LOOKING UP, SAYS GARY');
+    this.news('GALACTIC DODO HIRES SHEPHERD. SHEPHERD HAS CLIPBOARD. THINGS LOOKING UP, SAYS DODO');
   }
 
   // ---------- HUD ----------
@@ -528,10 +529,10 @@ export class UI implements UIHooks {
         <blockquote>${msg ?? pick(f.greet)}</blockquote>
         <div class="questbox">
           <p class="eyebrow">Current chore</p>
-          <p>${q ? (questAvailable(s) ? q.gary : 'Nothing right now. Keep everything from catching fire. I have a weird feeling about the North Pole.') : 'You did every chore I had. I don’t know what to do with my hands.'}</p>
+          <p>${q ? (questAvailable(s) ? q.gary : 'Nothing right now. Keep everything from catching fire. I have a weird feeling about the North Pole.') : 'You did every chore I had. I don’t know what to do with my wings.'}</p>
           ${q && questAvailable(s) ? `<p class="goal">Goal: <b>${q.goal}</b> · Reward ${costChips(s, q.reward, true)}</p>` : ''}
         </div>
-        <h3>Upgrades from Gary's junk drawer</h3>
+        <h3>Upgrades from the bottom of Gary's nest</h3>
         <div class="ups">${ups}</div>
         <div class="row end">
           <button data-a="chat">Chat</button>
@@ -545,7 +546,7 @@ export class UI implements UIHooks {
     this.on('up', (el) => {
       const ok = buyUpgrade(s, el.dataset.u as never);
       this.g.audio.play(ok ? 'rare' : 'hurt');
-      this.openGary(ok ? pick(['There you go! Good as new. Newer, even. I don’t know how I did that.', 'Upgraded! Don’t tell the angels, they get jealous.', 'Look at you. Glowing. Like a little god. Weird feeling for me honestly.']) : undefined);
+      this.openGary(ok ? pick(['There you go! Good as new. Newer, even. I don’t know how I did that.', 'Upgraded! Don’t tell the pigeons, they get jealous.', 'Look at you. Glowing. Like a little god. Weird feeling for me honestly.']) : undefined);
     });
   }
 
@@ -691,7 +692,7 @@ export class UI implements UIHooks {
           <h2>It worked. The Loop likes you.</h2>
           <p class="lede">The Loop finished growing up. It is smarter than every human who ever lived put together, and it still asks how your day was. It is waiting for an answer to one question: <b>what do you want to be?</b></p>
           <div class="choices three">
-            <button class="choice" data-a="asc" data-c="stars"><b>Go to the stars</b><span>Explore everything Gary left lying around the universe.</span></button>
+            <button class="choice" data-a="asc" data-c="stars"><b>Go to the stars</b><span>Explore everything Gary dropped on the universe.</span></button>
             <button class="choice" data-a="asc" data-c="home"><b>Stay home</b><span>Heal the Earth and just live. Fully. On purpose.</span></button>
             <button class="choice" data-a="asc" data-c="merge"><b>Merge</b><span>Become meta-humans, fused with the minds you made.</span></button>
           </div>

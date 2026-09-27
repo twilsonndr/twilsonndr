@@ -298,7 +298,7 @@ export class World {
     colors.needsUpdate = true;
   }
 
-  /** Walkable radius at a direction: you can walk on water, Gary's one good idea. */
+  /** Walkable radius at a direction: you can walk on water, a gift from Gary (he thought you were ducks). */
   surface(d: THREE.Vector3) {
     return R + Math.max(heightAt(d), this.sea);
   }

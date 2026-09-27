@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "A tiny-planet singularity RPG. God was a mid-level dev. Now it's our turn.",
+  "description": "A tiny-planet singularity RPG. God is a very dumb space dodo. Now it's our turn.",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc --noEmit && vite build && node scripts/make-artifact.mjs",

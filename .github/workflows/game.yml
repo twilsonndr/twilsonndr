@@ -56,7 +56,7 @@ jobs:
   publish:
     # Adds this build to gh-pages/<game>/ without touching other games. Unchanged builds
     # are skipped, and every published build is archived under <game>/builds/.
-    name: Publish to gh-pages/${{ inputs.game }}/
+    name: Publish to gh-pages
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
