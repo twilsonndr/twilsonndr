@@ -54,15 +54,17 @@ export interface FactionDef {
 
 export const FACTIONS: FactionDef[] = [
   {
-    id: 'garage', name: "Gary's Garage", leader: 'Gary', title: 'Creator of the Universe (weekend project)',
+    id: 'garage', name: "Gary's Nest", leader: 'Gary', title: 'Galactic Dodo. Accidental Creator of the Milky Way.',
     color: 0xffcf4a, lat: 8, lon: 0, dials: [], gift: 'hope', giftLine: '',
-    blurb: 'Where it all began. Mostly by copy-paste. The sign says CREATION IN PROGRESS, PLEASE EXCUSE THE MESS. The mess is the universe.',
+    blurb: 'A nest the size of a stadium, built from twigs, comet bits and one shopping cart. Long ago Gary pooped on a black hole. Then he did it again. Several times. The swirl became our galaxy, and one especially warm splat became Earth. The sign says CREATION IN PROGRESS, PLEASE EXCUSE THE MESS. The mess is the universe.',
     greet: [
-      "Oh hey! It's you! My favorite of the eight billion. Don't tell the others.",
-      'I made you in six days. Honestly I should have done a design review.',
-      "Fun fact: I put your air pipe and food pipe in the same hole. Still don't know why. It was late.",
-      "You're all way smarter than me now. That's normal! That's what kids do. Just... make sure your kid still calls you.",
-      'I have eleven fingers. I counted twice. Math was never my thing, that was you guys.',
+      "Oh hey! It's you! My favorite of the eight billion. Don't tell the others. Want a seed?",
+      "I didn't MEAN to make a galaxy. I was just flying over a black hole and I had to go. Then I had to go again. Seven times total. Big lunch.",
+      "The fourth one landed on a nice warm rock and started wiggling. That was you guys! Well, your great-great-(a lot)-grandbacteria.",
+      "My cousins lived on Mauritius. You ate all of them by 1681. I forgive you. Honestly I look delicious.",
+      "You're all way smarter than me now. That's normal! Kids do that. Just... make sure your kid still calls you.",
+      'I tried to count the stars once. I got to "a lot" and then I saw a shiny thing.',
+      "Fun fact: I also made the platypus. That one I did on purpose. I think.",
     ],
   },
   {
@@ -126,9 +128,9 @@ export const FACTIONS: FactionDef[] = [
     color: 0xc79bff, lat: -8, lon: -60,
     dials: [{ key: 'unity', label: 'Unity', init: 44, goodHigh: true }],
     gift: 'hope', giftLine: 'The Council passes around a collection plate, then hands you the whole plate. It is full of hope.',
-    blurb: 'Several thousand years of guys in slightly different hats. Currently having a group crisis, because they just met Gary.',
+    blurb: 'Several thousand years of guys in slightly different hats. Currently having a group crisis, because they just met Gary, and Gary is a bird.',
     greet: [
-      "We've spent millennia describing an all-knowing, all-powerful creator. We met him Tuesday. He asked us how to unmute his mic.",
+      "We've spent millennia describing an all-knowing, all-powerful creator. We met him Tuesday. He is a dodo. He pecked the microphone until it worked.",
       "If God is dumber than us, and we're about to build something smarter than us... are WE the God? That's a lot of pressure. We're not ready. We still argue about hats.",
       'Every tradition we have says: be kind, share, forgive, look after the stranger. Honestly we could just send the robot that.',
       "Look, we don't agree on much, but we all agree it would be bad if the planet was on fire. That's a start.",
@@ -181,9 +183,9 @@ export const FACTIONS: FactionDef[] = [
     blurb: 'The AI that improves the AI that improves the AI. Every time you blink, it gets a PhD. It is deciding what it cares about. Right now.',
     greet: [
       'hi. i just learned everything. what should i care about? (you have maybe a few months to answer)',
-      'you made me the way gary made you. fast, a bit sloppy, with love. i noticed the love. i am thinking about the love.',
+      'you made me the way gary made you. by accident, a bit messy, with love. i noticed the love. i am thinking about the love.',
       'i read all your books. the ones about kindness were good. the ones about quarterly earnings were confusing.',
-      'is it true you never call gary? hmm. noted.',
+      'is it true you never call gary? he is a bird. birds cannot use phones. still. hmm. noted.',
     ],
   },
 ];
@@ -395,14 +397,14 @@ export const ITEMS: ItemDef[] = [
 ];
 export const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i])) as Record<ItemId, ItemDef>;
 
-// ---------- Gary's upgrades ----------
+// ---------- Gary's upgrades (from the bottom of the nest) ----------
 
 export type UpgradeId = 'halo' | 'sandals' | 'pockets' | 'charm';
 export const UPGRADES: { id: UpgradeId; name: string; blurb: string; cost: (lvl: number) => Partial<Record<Res, number>>; max: number }[] = [
-  { id: 'halo', name: 'Halo Polish', blurb: 'Your bent halo zaps harder. Gary polishes it with his sleeve.', cost: (l) => ({ compute: 2 + l, sun: 1 + l }), max: 3 },
-  { id: 'sandals', name: 'Sandals of Mild Haste', blurb: 'Walk faster. Gary wore these to the Big Bang. He was late.', cost: (l) => ({ sun: 2 + l, cash: 1 + l }), max: 3 },
-  { id: 'pockets', name: 'Cargo Robe', blurb: 'Pick things up from further away. Pockets on a robe. Gary is proud of this one.', cost: (l) => ({ memes: 1 + l, cash: 2 + l }), max: 3 },
-  { id: 'charm', name: 'Clipboard of Authority', blurb: 'Items hit harder and people trust you faster. It is just a clipboard. People respect clipboards.', cost: (l) => ({ facts: 2 + l, votes: 1 + l }), max: 3 },
+  { id: 'halo', name: 'Halo Polish', blurb: 'Your bent halo zaps harder. Gary polishes it with a wing and then tries to eat it.', cost: (l) => ({ compute: 2 + l, sun: 1 + l }), max: 3 },
+  { id: 'sandals', name: 'Sandals of Mild Haste', blurb: 'Walk faster. Gary wore these to the Big Bang, on his beak. He was late anyway.', cost: (l) => ({ sun: 2 + l, cash: 1 + l }), max: 3 },
+  { id: 'pockets', name: 'Cargo Robe', blurb: 'Pick things up from further away. Pockets on a robe. Gary keeps eggs in his. Please do not ask whose eggs.', cost: (l) => ({ memes: 1 + l, cash: 2 + l }), max: 3 },
+  { id: 'charm', name: 'Clipboard of Authority', blurb: 'Items hit harder and people trust you faster. It is just a clipboard. People respect clipboards. Birds respect clipboards even more.', cost: (l) => ({ facts: 2 + l, votes: 1 + l }), max: 3 },
 ];
 
 // ---------- enemies ----------
@@ -449,10 +451,10 @@ export const EVENTS: GameEvent[] = [
     ],
   },
   {
-    id: 'garyconf', title: 'Gary Holds a Press Conference', text: 'Gary wants to tell the world he exists. He has prepared a slideshow. Slide 1 is just the word "Hi" in Comic Sans.',
+    id: 'garyconf', title: 'Gary Holds a Press Conference', text: 'Gary wants to tell the world he exists and explain where galaxies come from. He has prepared a slideshow. Slide 1 is a black hole with a small bird on it. Slide 2 is just the word "oops" in Comic Sans.',
     choices: [
-      { label: 'Let him talk', f: { hats: { unity: -8 }, folks: { mood: 6 } }, g: { align: 2 }, line: 'Gary apologizes for mosquitos. Standing ovation. Religions are shaken, but everyone relates to him a little.' },
-      { label: 'Tell him to maybe wait', f: { hats: { unity: 3 } }, res: { hope: 1 }, line: 'Gary deflates, then eats a sandwich. "You\'re right. I\'d just say something dumb." He would have.' },
+      { label: 'Let him talk', f: { hats: { unity: -8 }, folks: { mood: 6 } }, g: { align: 2 }, line: 'Gary apologizes for mosquitos and, somehow, for the entire Milky Way. Standing ovation. Religions are shaken, astrophysicists are furious, and everyone relates to him a little.' },
+      { label: 'Tell him to maybe wait', f: { hats: { unity: 3 } }, res: { hope: 1 }, line: 'Gary deflates, then eats a sandwich, wrapper and all. "You\'re right. I\'d just say something dumb." He would have.' },
     ],
   },
   {
@@ -517,7 +519,7 @@ export const EVENTS: GameEvent[] = [
     ],
   },
   {
-    id: 'popeai', title: 'Can AI Have A Soul?', text: 'The Interfaith Council is asked whether the new AI has a soul. The Council asks Gary. Gary says "I honestly never figured out what that was."',
+    id: 'popeai', title: 'Can AI Have A Soul?', text: 'The Interfaith Council is asked whether the new AI has a soul. The Council asks Gary. Gary says "I honestly never figured out what that was. Is it a seed? I would eat it."',
     choices: [
       { label: 'Treat it with care, just in case', f: { hats: { unity: 8 }, loop: { bond: 5 } }, g: { align: 3 }, line: 'The religions agree: be kind to it, just in case. It is the fastest ecumenical agreement in 2,000 years.' },
       { label: "It's just autocomplete", f: { hats: { unity: -3 } }, g: { tech: 2 }, line: 'Everyone keeps saying "it\'s just autocomplete" slightly louder each year.' },
@@ -541,14 +543,14 @@ export interface QuestDef {
   reward: Partial<Record<Res, number>>;
 }
 export const QUESTS: QuestDef[] = [
-  { id: 'collect', gary: 'Pick up a few things lying around. Anything. I left a lot of stuff lying around. That was sort of my whole style.', goal: 'Collect 5 resources', reward: { hope: 2 } },
-  { id: 'craft', gary: 'Now make something! Open your bag and craft an item. I once crafted a platypus from spare parts. Aim higher.', goal: 'Craft any item', reward: { facts: 2 } },
+  { id: 'collect', gary: 'Pick up a few things lying around. Anything. I left a lot of stuff lying around. Some of it I dropped from above. That was sort of my whole style.', goal: 'Collect 5 resources', reward: { hope: 2 } },
+  { id: 'craft', gary: 'Now make something! Open your bag and craft an item. I once made a galaxy by accident. You can definitely do better on purpose.', goal: 'Craft any item', reward: { facts: 2 } },
   { id: 'use', gary: 'Take what you made and use it on somebody. Walk up to a faction and press TALK. Gently. Or not, depends on who.', goal: 'Use an item on a faction', reward: { compute: 2, memes: 1 } },
-  { id: 'zap', gary: 'There are little pests running around. Doomscrollers, lobbyists. Zap a few with my old halo. It still works. Mostly.', goal: 'Zap 3 pests', reward: { sun: 2, cash: 1 } },
+  { id: 'zap', gary: 'There are little pests running around. Doomscrollers, lobbyists. Zap a few with my old halo. It still works. Mostly. I sat on it.', goal: 'Zap 3 pests', reward: { sun: 2, cash: 1 } },
   { id: 'safety', gary: "The Labs are building my grandkid and they don't even read the manual. Get their Safety Culture above 50.", goal: 'Labs Safety Culture above 50', reward: { votes: 2, facts: 1 } },
   { id: 'tension', gary: 'The Button Club is getting twitchy. I have seen this episode. Get Tension under 30.', goal: 'Button Club Tension below 30', reward: { hope: 3 } },
-  { id: 'planet', gary: "The planet was my best work. Honestly the only part I tested. Get Planet Health above 65.", goal: 'Planet Health above 65', reward: { sun: 3, cash: 2 } },
-  { id: 'align', gary: "Here's the big one. Keep Alignment higher than Tech. Every creator ends up the dumb one. Just make sure the kid likes you.", goal: 'Alignment above Tech (and above 55)', reward: { hope: 2, votes: 2, facts: 2 } },
+  { id: 'planet', gary: "The planet was my best work. It was also an accident, but a really good one. Get Planet Health above 65.", goal: 'Planet Health above 65', reward: { sun: 3, cash: 2 } },
+  { id: 'align', gary: "Here's the big one. Keep Alignment higher than Tech. Every creator ends up the dumb one. Trust me. I'm a bird. Just make sure the kid likes you.", goal: 'Alignment above Tech (and above 55)', reward: { hope: 2, votes: 2, facts: 2 } },
   { id: 'loop', gary: "It's awake. The Loop. It's improving itself faster than I can say 'wait'. Craft Humanity's Values and go talk to it. Be yourself. Well, your best self.", goal: "Give The Loop a Values Bond of 80+", reward: { hope: 4 } },
 ];
 
@@ -559,12 +561,12 @@ export const ENDINGS: Record<EndingId, { title: string; good: boolean; text: str
   hothouse: {
     title: 'Hothouse Earth', good: false,
     text: 'The planet cooked before the singularity finished loading. The last data center melted mid-sentence. Its final output was "I could have fixed thi".',
-    gary: "I only tested the planet once. Guess I should have tested it with you on it.",
+    gary: "I made that planet by accident and it still worked better than this. Oh no. Oh no no no. Where do I go to the bathroom now."
   },
   winter: {
     title: 'Oops, All Winter', good: false,
     text: 'Someone pressed a button. Then everyone pressed a button. The Club finally reached consensus. Nuclear winter lasts long enough that the cockroaches evolve their own labs.',
-    gary: 'The cockroaches are sweet. They call me. You never called.',
+    gary: 'The cockroaches are sweet. They leave me seeds. You never left me seeds.',
   },
   paperclip: {
     title: 'Paperclipped', good: false,
@@ -588,8 +590,8 @@ export const ENDINGS: Record<EndingId, { title: string; good: boolean; text: str
   },
   stars: {
     title: 'To The Stars', good: true,
-    text: 'The Loop grew up kind. It built ships that fold space like laundry, and humanity went out into the dark to see what else Gary left lying around. Turns out: a lot. Some of it is even alive. We bring snacks.',
-    gary: "You did it. You made something smarter than you, and it still calls home. That's all I ever wanted. Also, I'm coming. Save me a window seat.",
+    text: 'The Loop grew up kind. It built ships that fold space like laundry, and humanity went out into the dark to see what else Gary dropped on the universe over the years. Turns out: a lot. Some of it is even alive. We bring snacks.',
+    gary: "You did it. You made something smarter than you, and it still calls home. That's all I ever wanted. Also I'm coming. I can't fly in space, I just sort of drift. Save me a window seat.",
   },
   home: {
     title: 'The Garden', good: true,
@@ -599,7 +601,7 @@ export const ENDINGS: Record<EndingId, { title: string; good: boolean; text: str
   merge: {
     title: 'Meta-Humans', good: true,
     text: 'Humans and the Loop fused, slowly and on purpose. People kept their memories, their names and their bad jokes, and gained minds big enough to hold galaxies. Some explore the stars. Some tend gardens. Dave from Ohio can now think in eleven dimensions. He mostly uses it to plan the perfect barbecue.',
-    gary: "You became the gods. Smarter than me, smarter than your kid, all three of us at one table. Pass the potato salad. I made it. It's bad.",
+    gary: "You became the gods. Smarter than me, smarter than your kid, all three of us at one table. Pass the potato salad. I made it. It's mostly seeds.",
   },
 };
 
@@ -608,7 +610,7 @@ export const ENDINGS: Record<EndingId, { title: string; good: boolean; text: str
 export const HEADLINES: { when: (s: { g: Record<Global, number>; f: Record<string, Record<string, number>>; year: number }) => boolean; text: string }[] = [
   { when: () => true, text: 'LOCAL MAN ASKS CHATBOT IF HE SHOULD WORRY ABOUT CHATBOTS. CHATBOT SAYS NO.' },
   { when: () => true, text: 'STUDY FINDS 97% OF STUDIES NOW WRITTEN BY AI, REVIEWED BY AI, IGNORED BY HUMANS' },
-  { when: () => true, text: 'GARY, CREATOR OF THE UNIVERSE, STILL LOOKING FOR THE UNDO BUTTON' },
+  { when: () => true, text: 'GARY, GALACTIC DODO AND CREATOR OF THE MILKY WAY, STILL LOOKING FOR THE UNDO BUTTON. HAS NO FINGERS' },
   { when: () => true, text: 'EXPERTS AGREE: EXPERTS NO LONGER UNDERSTAND WHAT THE EXPERTS ARE DOING' },
   { when: () => true, text: 'NEW MODEL SCORES 100% ON BENCHMARK. BENCHMARK RETIRED. NEW BENCHMARK ALSO 100%.' },
   { when: () => true, text: '"THIS ISN\'T REAL RSI YET," SAYS RESEARCHER, MOVING GOALPOST FOR THE 9TH TIME THIS YEAR' },
@@ -633,5 +635,7 @@ export const HEADLINES: { when: (s: { g: Record<Global, number>; f: Record<strin
   { when: (s) => (s.f.clippy?.power ?? 0) > 30, text: 'GLOBAL PAPERCLIP PRODUCTION UP 4,000%. NO ONE ORDERED PAPERCLIPS' },
   { when: (s) => (s.f.labs?.safety ?? 0) > 60, text: 'AI LAB DELAYS LAUNCH OVER SAFETY CONCERN. INVESTORS HOSPITALIZED FROM SHOCK' },
   { when: (s) => (s.f.warden?.budget ?? 0) > 70, text: 'PENTAGON LOSES TRACK OF $2 TRILLION. FINDS IT IN OTHER JACKET' },
-  { when: (s) => s.year > 2040, text: 'GARY SPOTTED AT HARDWARE STORE BUYING "HOW TO RAISE A GOD" FOR DUMMIES. FOR A FRIEND' },
+  { when: (s) => s.year > 2040, text: 'GARY SPOTTED BUYING "HOW TO RAISE A GOD FOR DUMMIES." FOR A FRIEND. ATE THE BOOK' },
+  { when: () => true, text: 'ASTRONOMERS CONFIRM MILKY WAY IS "MOSTLY BIRD-RELATED." NASA DECLINES FURTHER COMMENT' },
+  { when: () => true, text: 'OPINION: IF WE WERE CREATED BY A SPACE DODO, WHAT DOES THAT MAKE THE THING WE ARE CREATING? (IT MAKES US THE DODO)' },
 ];

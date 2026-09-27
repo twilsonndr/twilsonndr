@@ -110,7 +110,7 @@ export function makePlayer(): Rig & { halo: THREE.Mesh } {
   const halo = makeHalo();
   halo.position.set(0, 2.15, 0);
   halo.rotation.set(Math.PI / 2 - 0.35, 0.2, 0);
-  halo.scale.set(1, 0.82, 1); // it's a bit bent. Gary sat on it.
+  halo.scale.set(1, 0.82, 1); // it's a bit bent. Gary sat on it, like an egg.
   rig.group.add(halo);
   // clipboard
   const clip = new THREE.Group();
@@ -123,25 +123,67 @@ export function makePlayer(): Rig & { halo: THREE.Mesh } {
   return { ...rig, halo };
 }
 
-export function makeGary(): Rig {
-  const rig = makePerson({ shirt: 0xf3efe6, pants: 0xf3efe6, scale: 1.9, skin: 0xf0c49a });
-  const g = rig.group;
-  // robe skirt
-  g.add(mesh(cone(0.62, 1.1, 10), mat(0xf3efe6), [0, 0.62, 0]));
-  // big beard, bald head with one tuft
-  g.add(mesh(cone(0.32, 0.8, 8), mat(0xffffff), [0, 1.28, 0.2], [Math.PI, 0, 0]));
-  g.add(mesh(sph(0.08, 0), mat(0xffffff), [0.05, 1.96, 0]));
-  const halo = makeHalo(0.4);
-  halo.position.set(0.15, 2.15, 0);
-  halo.rotation.set(Math.PI / 2 - 0.6, 0.4, 0.3);
+export interface DodoRig {
+  group: THREE.Group;
+  head: THREE.Group;
+  wings: THREE.Object3D[];
+  halo: THREE.Mesh;
+}
+
+/** Gary: a big, round, very dumb galactic dodo in a fishbowl space helmet. */
+export function makeDodo(): DodoRig {
+  const g = new THREE.Group();
+  const plume = mat(0x8a86d8);
+  const belly = mat(0xc4c0f2);
+  // round body, a little bottom-heavy
+  g.add(mesh(sph(1, 2), plume, [0, 1.25, 0], [0, 0, 0], [1.05, 1, 1.15]));
+  g.add(mesh(sph(0.8, 2), belly, [0, 1.05, 0.35], [0, 0, 0], [1, 0.9, 0.8]));
+  // the famous curly tail tuft
+  for (let i = 0; i < 4; i++) {
+    const t = mesh(cone(0.16, 0.7, 5), mat(0xf4f1ea), [(i - 1.5) * 0.14, 1.7 + i * 0.06, -1.05], [-2.3 + i * 0.12, 0, (i - 1.5) * 0.25]);
+    g.add(t);
+  }
+  // stubby useless wings
+  const wings: THREE.Object3D[] = [];
+  for (const sx of [-1, 1]) {
+    const w = new THREE.Group();
+    w.position.set(sx * 0.98, 1.45, 0);
+    w.add(mesh(sph(0.34, 1), plume, [sx * 0.12, -0.2, 0], [0, 0, 0], [0.45, 1, 0.8]));
+    wings.push(w);
+    g.add(w);
+  }
+  // stout yellow legs and big feet
+  for (const sx of [-1, 1]) {
+    g.add(mesh(cyl(0.12, 0.14, 0.5, 6), mat(0xe8c14a), [sx * 0.4, 0.25, 0.15]));
+    for (const toe of [-0.35, 0, 0.35]) g.add(mesh(box(0.08, 0.06, 0.34), mat(0xe8c14a), [sx * 0.4 + toe * 0.3, 0.03, 0.32], [0, toe, 0]));
+  }
+  // head on a thick neck, with the big hooked beak
+  const head = new THREE.Group();
+  head.position.set(0, 2.1, 0.45);
+  head.add(mesh(cyl(0.3, 0.42, 0.6, 8), plume, [0, -0.2, -0.05]));
+  head.add(mesh(sph(0.42, 2), mat(0xc9cdd6), [0, 0.2, 0]));
+  const beak = new THREE.Group();
+  beak.position.set(0, 0.12, 0.3);
+  beak.add(mesh(cone(0.22, 0.75, 7), mat(0xd9d27a), [0, 0, 0.32], [Math.PI / 2, 0, 0]));
+  beak.add(mesh(sph(0.14, 1), mat(0x3a3a2a), [0, -0.08, 0.66], [0, 0, 0], [1, 1.2, 1.1]));
+  head.add(beak);
+  head.add(googlyEyes(0.13, 0.26, 0.32, 0.26));
+  // fishbowl space helmet
+  const bowl = new THREE.Mesh(
+    new THREE.SphereGeometry(0.78, 20, 14),
+    new THREE.MeshStandardMaterial({ color: 0xcfe9ff, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.22, depthWrite: false }),
+  );
+  bowl.position.set(0, 0.18, 0.2);
+  head.add(bowl);
+  head.add(mesh(new THREE.TorusGeometry(0.62, 0.07, 6, 20), mat(0xd7dde8, { m: 0.8, r: 0.3 }), [0, -0.3, 0.15], [Math.PI / 2, 0, 0]));
+  g.add(head);
+  // his halo is bent too. He sits on everything.
+  const halo = makeHalo(0.46);
+  halo.position.set(0.12, 3.25, 0.4);
+  halo.rotation.set(Math.PI / 2 - 0.5, 0.3, 0.25);
+  halo.scale.set(1, 0.8, 1);
   g.add(halo);
-  // coffee mug: "WORLD'S OKAYEST CREATOR"
-  const mug = mesh(cyl(0.1, 0.1, 0.18, 8), mat(0xffffff));
-  mug.position.set(0, -0.7, 0.1);
-  rig.arms[1].add(mug);
-  // flip flops
-  for (const sx of [-1, 1]) g.add(mesh(box(0.16, 0.03, 0.32), mat(0x2aa3ff), [sx * 0.16, 0.02, 0.05]));
-  return rig;
+  return { group: g, head, wings, halo };
 }
 
 // ---------- faction headquarters ----------
@@ -178,31 +220,89 @@ function sign(text: string, bg: string, fg: string, w: number, h: number, glow =
 }
 
 function garage(): Building {
+  // Gary's Nest: a huge messy nest, Gary in it, and the black hole where it all began.
   const g = new THREE.Group();
-  g.add(mesh(box(6.4, 3.2, 5), mat(0xd9c6a5), [0, 1.6, -1]));
-  g.add(mesh(box(6.8, 0.4, 5.4), mat(0x8b5a3c), [0, 3.4, -1]));
-  // roll-up door stripes
-  for (let i = 0; i < 5; i++) g.add(mesh(box(4, 0.42, 0.1), mat(i % 2 ? 0xb9b2a4 : 0xcfc8ba), [0, 0.35 + i * 0.5, 1.52]));
-  const s = sign("GARY'S GARAGE", '#2a1f4a', '#ffd54a', 5.6, 0.9, 0.9);
-  s.position.set(0, 3.95, 1.3);
+  const twig = mat(0x7a5134);
+  const twig2 = mat(0x9b6a3c);
+  g.add(mesh(new THREE.TorusGeometry(2.7, 0.85, 8, 24), twig, [0, 0.55, -0.8], [Math.PI / 2, 0, 0], [1, 1, 0.75]));
+  g.add(mesh(cyl(2.5, 2.2, 0.5, 18), mat(0x5c3d22), [0, 0.25, -0.8]));
+  // loose sticks poking out everywhere
+  for (let i = 0; i < 34; i++) {
+    const a = (i / 34) * Math.PI * 2;
+    const r = 2.5 + Math.sin(i * 7.3) * 0.5;
+    const stick = mesh(cyl(0.05, 0.05, 1.6 + (i % 3) * 0.4, 4), i % 2 ? twig : twig2,
+      [Math.cos(a) * r, 0.7 + Math.sin(i * 3.1) * 0.35, -0.8 + Math.sin(a) * r],
+      [Math.sin(i * 1.7) * 1.2, a, Math.PI / 2 + Math.cos(i * 2.3) * 0.5]);
+    g.add(stick);
+  }
+  // one shopping cart, because of course
+  const cart = new THREE.Group();
+  cart.add(mesh(box(0.9, 0.6, 0.6), mat(0xb8b8b8, { m: 0.8, r: 0.3 }), [0, 0.5, 0]));
+  cart.add(mesh(box(0.06, 0.06, 0.7), mat(0xd13b3b), [-0.5, 0.85, 0]));
+  cart.position.set(-2.4, 0.4, -2.6);
+  cart.rotation.set(0.3, 0.8, 0.5);
+  g.add(cart);
+  // two big speckled eggs (whose? do not ask)
+  for (const [x, z, rot] of [[1.2, -1.6, 0.3], [0.6, -2.2, -0.4]] as const) {
+    g.add(mesh(sph(0.45, 2), mat(0xf2ead8, { flat: false, r: 0.5 }), [x, 0.85, z], [rot, 0, rot], [0.85, 1.15, 0.85]));
+  }
+  // Gary himself
+  const gary = makeDodo();
+  gary.group.position.set(-0.2, 0.35, -0.6);
+  gary.group.scale.setScalar(1.6);
+  g.add(gary.group);
+  // Exhibit A: the black hole. He pooped on it. Several times. That's the Milky Way.
+  const bh = new THREE.Group();
+  bh.add(mesh(cyl(0.35, 0.45, 1.1, 8), mat(0x2a1f4a), [0, 0.55, 0]));
+  const hole = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 12), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  hole.position.y = 1.75;
+  bh.add(hole);
+  const disk = new THREE.Mesh(
+    new THREE.TorusGeometry(0.72, 0.13, 8, 36),
+    new THREE.MeshStandardMaterial({ color: 0xffb347, emissive: 0xff7a1a, emissiveIntensity: 2.2 }),
+  );
+  disk.position.y = 1.75;
+  disk.rotation.x = Math.PI / 2 - 0.35;
+  bh.add(disk);
+  const swirl = new THREE.Mesh(
+    new THREE.TorusGeometry(1.05, 0.04, 6, 48),
+    new THREE.MeshStandardMaterial({ color: 0xbfe8ff, emissive: 0x9ad8ff, emissiveIntensity: 1.6 }),
+  );
+  swirl.position.y = 1.75;
+  swirl.rotation.x = Math.PI / 2 - 0.35;
+  bh.add(swirl);
+  const plaque = sign('EXHIBIT A · WHERE THE GALAXY CAME FROM', '#101418', '#ffd54a', 2.4, 0.3, 0.8);
+  plaque.position.set(0, 0.6, 0.47);
+  bh.add(plaque);
+  bh.position.set(3.4, 0, 1.2);
+  bh.rotation.y = -0.5;
+  g.add(bh);
+  // signs on a post out front
+  g.add(mesh(cyl(0.08, 0.08, 2.6, 6), twig, [-2.9, 1.3, 2.4]));
+  g.add(mesh(cyl(0.08, 0.08, 2.6, 6), twig, [-0.3, 1.3, 2.4]));
+  const s = sign("GARY'S NEST", '#2a1f4a', '#ffd54a', 3.2, 0.75, 0.9);
+  s.position.set(-1.6, 2.35, 2.45);
   g.add(s);
-  const s2 = sign('CREATION IN PROGRESS · EXCUSE THE MESS', '#ffd54a', '#2a1f4a', 5.4, 0.45, 0.4);
-  s2.position.set(0, 2.85, 1.58);
+  const s2 = sign('CREATION IN PROGRESS · EXCUSE THE MESS', '#ffd54a', '#2a1f4a', 3.2, 0.34, 0.4);
+  s2.position.set(-1.6, 1.78, 2.45);
   g.add(s2);
-  // workbench with a half-made platypus
-  g.add(mesh(box(2.2, 0.9, 1), mat(0x7a5134), [2.8, 0.45, 2.6]));
-  g.add(mesh(sph(0.3, 1), mat(0x8a6a4a), [2.6, 1.1, 2.6], [0, 0, 0], [1.4, 0.7, 1]));
-  g.add(mesh(box(0.3, 0.06, 0.2), mat(0xe0a030), [3.05, 1.1, 2.6]));
-  // a big halo neon on the roof
-  const halo = makeHalo(1.1);
-  halo.position.set(0, 5.1, -1);
-  halo.rotation.x = Math.PI / 2 - 0.3;
-  g.add(halo);
+  // the workbench stays: crafting happens here. Half a platypus on it.
+  g.add(mesh(box(1.6, 0.8, 0.8), mat(0x7a5134), [2.2, 0.4, 3.0]));
+  g.add(mesh(sph(0.26, 1), mat(0x8a6a4a), [2.0, 1.0, 3.0], [0, 0, 0], [1.4, 0.7, 1]));
+  g.add(mesh(box(0.28, 0.06, 0.2), mat(0xe0a030), [2.4, 1.0, 3.0]));
   return {
-    group: g, labelY: 6.6, radius: 4.2,
+    group: g, labelY: 7, radius: 4.2,
     anim: (t) => {
-      halo.rotation.z = t * 0.6;
-      halo.position.y = 5.1 + Math.sin(t * 1.4) * 0.15;
+      // bob, peck at nothing, look around, flap uselessly
+      gary.group.position.y = 0.35 + Math.abs(Math.sin(t * 1.6)) * 0.08;
+      const peck = Math.max(0, Math.sin(t * 0.9)) ** 12;
+      gary.head.rotation.x = peck * 0.9;
+      gary.head.rotation.y = Math.sin(t * 0.37) * 0.6;
+      const flap = Math.sin(t * 0.5) > 0.92 ? Math.sin(t * 30) * 0.6 : 0;
+      gary.wings.forEach((w, i) => (w.rotation.z = (i ? -1 : 1) * (0.1 + flap)));
+      gary.halo.rotation.z = t * 0.8;
+      disk.rotation.z = t * 1.6;
+      swirl.rotation.z = -t * 0.7;
     },
   };
 }
