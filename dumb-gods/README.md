@@ -87,4 +87,4 @@ scripts/       artifact converter, smoke test
 
 `.github/workflows/dumb-gods.yml` runs on every push and PR that touches the game: typecheck, tests, build, headless smoke test, then uploads the playable build and the smoke screenshots as artifacts.
 
-Optional GitHub Pages mirror: set *Settings > Pages > Source* to *GitHub Actions* and add the repository variable `ENABLE_PAGES=true`. Pushes to `main` then deploy the game.
+After a green run on any push (any branch), the workflow's deploy job commits the build to `dumb-gods/` on the `gh-pages` branch, leaving the other games' folders alone. To serve it, set *Settings > Pages > Source* to *Deploy from a branch*, `gh-pages`, `/ (root)`; the game is then at `/dumb-gods/`.
