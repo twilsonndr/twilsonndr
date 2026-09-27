@@ -561,7 +561,7 @@ export const ENDINGS: Record<EndingId, { title: string; good: boolean; text: str
   hothouse: {
     title: 'Hothouse Earth', good: false,
     text: 'The planet cooked before the singularity finished loading. The last data center melted mid-sentence. Its final output was "I could have fixed thi".',
-    gary: "I made that planet by accident and it still worked better than this. Oh no. Oh no no no. Where do I go to the bathroom now."
+    gary: "I made that planet by accident and it still worked better than this. Oh no. Oh no no no. Where do I go to the bathroom now.",
   },
   winter: {
     title: 'Oops, All Winter', good: false,
