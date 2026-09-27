@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tiny Arcade</title>
+    <meta name="description" content="Small, silly 3D browser games. Click one and play, no install." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bagel+Fat+One&display=swap" />
+    <style>
+      :root {
+        --ink: #2b1a12;
+        --paper: #fff8ec;
+        --bg: #ffe9c7;
+        --muted: #6b5a4e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f6ead8;
+          --paper: #2a2320;
+          --bg: #171210;
+          --muted: #b8a898;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 40px 16px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 17px/1.5 'Atkinson Hyperlegible', system-ui, sans-serif;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0;
+        font: 400 clamp(44px, 10vw, 76px) / 1 'Bagel Fat One', system-ui, sans-serif;
+      }
+      .lede {
+        color: var(--muted);
+        margin: 10px 0 32px;
+      }
+      .games {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+      a.game {
+        display: block;
+        padding: 22px;
+        border: 3px solid var(--ink);
+        border-radius: 20px;
+        background: var(--paper);
+        color: inherit;
+        text-decoration: none;
+        box-shadow: 0 6px 0 var(--ink);
+        transition: transform 0.12s, box-shadow 0.12s;
+      }
+      a.game:hover,
+      a.game:focus-visible {
+        transform: translateY(-3px);
+        box-shadow: 0 9px 0 var(--ink);
+      }
+      .icon {
+        font-size: 48px;
+        line-height: 1;
+      }
+      h2 {
+        margin: 12px 0 6px;
+        font: 400 30px 'Bagel Fat One', system-ui, sans-serif;
+      }
+      .game p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .play {
+        display: inline-block;
+        margin-top: 14px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Tiny Arcade</h1>
+      <p class="lede">Small, silly 3D browser games. Pick one and play. Works on phones too.</p>
+      <div class="games">
+        <a class="game" href="tiny-claw/">
+          <div class="icon">🦀</div>
+          <h2>Tiny Claw</h2>
+          <p>A crab with a tiny claw has to stop an admiral from pinching the Moon. Everybody doubts him. It's not the size of the claw, it's the side to side.</p>
+          <span class="play">Play →</span>
+        </a>
+        <a class="game" href="dumb-gods/">
+          <div class="icon">😇</div>
+          <h2>Dumb Gods</h2>
+          <p>A tiny-planet singularity RPG. God was a mid-level dev. Now it's our turn.</p>
+          <span class="play">Play →</span>
+        </a>
+      </div>
+    </main>
+  </body>
+</html>

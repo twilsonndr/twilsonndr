@@ -1,0 +1,82 @@
+name: Arcade (GitHub Pages)
+
+# One Pages site per repo, so every game deploys together:
+#   /            arcade/index.html
+#   /tiny-claw/  Tiny Claw
+#   /dumb-gods/  Dumb Gods
+# Turn on Settings > Pages > Source "GitHub Actions", then add the repository
+# variable ENABLE_PAGES=true. Pushes to main then publish the arcade.
+
+on:
+  push:
+    branches: [main]
+    paths: ['tiny-claw/**', 'dumb-gods/**', 'arcade/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build every game
+    if: vars.ENABLE_PAGES == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        game: [tiny-claw, dumb-gods]
+    defaults:
+      run:
+        working-directory: ${{ matrix.game }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.game }}/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ matrix.game }}
+          path: ${{ matrix.game }}/dist/index.html
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: arcade
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: site-*
+          path: games
+      - name: Assemble the arcade
+        run: |
+          mkdir -p site
+          cp -r arcade/. site/
+          for d in games/site-*; do
+            name="${d#games/site-}"
+            mkdir -p "site/$name"
+            cp "$d/index.html" "site/$name/index.html"
+          done
+          find site -type f | sort
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -87,4 +87,4 @@ scripts/       artifact converter, smoke test
 
 `.github/workflows/dumb-gods.yml` runs on every push and PR that touches the game: typecheck, tests, build, headless smoke test, then uploads the playable build and the smoke screenshots as artifacts.
 
-Optional GitHub Pages mirror: set *Settings > Pages > Source* to *GitHub Actions* and add the repository variable `ENABLE_PAGES=true`. Pushes to `main` then deploy the game.
+Optional GitHub Pages mirror: `.github/workflows/pages.yml` publishes every game in this repo as one arcade site (this one lands at `/dumb-gods/`). Set *Settings > Pages > Source* to *GitHub Actions* and add the repository variable `ENABLE_PAGES=true`; pushes to `main` then deploy.

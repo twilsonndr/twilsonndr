@@ -1,14 +1,14 @@
-name: Dumb Gods
+name: Tiny Claw
 
 on:
   push:
-    paths: ['dumb-gods/**', '.github/workflows/dumb-gods.yml']
+    paths: ['tiny-claw/**', '.github/workflows/tiny-claw.yml']
   pull_request:
-    paths: ['dumb-gods/**', '.github/workflows/dumb-gods.yml']
+    paths: ['tiny-claw/**', '.github/workflows/tiny-claw.yml']
   workflow_dispatch:
 
 concurrency:
-  group: dumb-gods-${{ github.ref }}
+  group: tiny-claw-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: dumb-gods
+    working-directory: tiny-claw
 
 jobs:
   build:
@@ -29,27 +29,27 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: dumb-gods/package-lock.json
+          cache-dependency-path: tiny-claw/package-lock.json
       - run: npm ci
       - run: npm run typecheck
-      - name: Simulation + balance tests
+      - name: Simulation tests (physics, chapters, a bot that has to beat the game)
         run: npm test
       - name: Build single-file game
         run: npm run build
-      - name: Headless smoke test (boots the game in Chrome, plays, forces an ending)
+      - name: Headless smoke test (plays every chapter in Chrome, desktop and touch)
         env:
           CHROMIUM_PATH: /usr/bin/google-chrome
         run: npm run smoke -- --shots smoke-shots
       - name: Upload playable build
         uses: actions/upload-artifact@v4
         with:
-          name: dumb-gods-web
-          path: dumb-gods/dist
+          name: tiny-claw-web
+          path: tiny-claw/dist
           if-no-files-found: error
       - name: Upload smoke screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dumb-gods-smoke-screenshots
-          path: dumb-gods/smoke-shots
+          name: tiny-claw-smoke-screenshots
+          path: tiny-claw/smoke-shots
           if-no-files-found: ignore

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Tiny Claw</title>
+    <meta name="description" content="A tiny crab with a tiny claw has to save the world. It's not the size of the claw, it's the side to side." />
+    <meta name="theme-color" content="#ff7a4d" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bagel+Fat+One&display=swap" />
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div id="floats"></div>
+
+    <div id="hud" hidden>
+      <div id="topleft">
+        <div id="hearts" aria-label="Confidence"></div>
+        <div id="obj"></div>
+        <div id="belief"></div>
+      </div>
+      <div id="topright">
+        <div id="score">0</div>
+        <button id="btn-mute" aria-label="Toggle sound">🔊</button>
+        <button id="btn-pause" aria-label="Pause">❚❚</button>
+      </div>
+      <div id="bossbar" hidden>
+        <p>Admiral Clawdius Maximus <em>screws remaining</em></p>
+        <div class="screws"></div>
+      </div>
+      <div id="wiggle"><span>SIDE TO SIDE</span><i></i></div>
+      <div id="touch">
+        <div id="stickzone"></div>
+        <div id="stick"><div id="knob"></div></div>
+        <button id="t-dash">DASH</button>
+        <button id="t-pinch">PINCH</button>
+      </div>
+    </div>
+
+    <div id="toast" role="status"></div>
+    <div id="card" hidden></div>
+
+    <div id="dialog" hidden>
+      <div class="portrait"></div>
+      <div class="body">
+        <p class="name"></p>
+        <p class="text"></p>
+        <p class="hint">Space / click to continue</p>
+      </div>
+      <button data-a="skip" class="skip">Skip ⏭</button>
+    </div>
+
+    <div id="title" hidden></div>
+    <div id="overlay" hidden></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
